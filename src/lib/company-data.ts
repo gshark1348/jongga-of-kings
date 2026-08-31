@@ -86,7 +86,7 @@ const seeds: Seed[] = [
 
 export const realCompanies: Company[] = seeds.map((seed, index) => {
   const [id, code, name, market, sector, description, cap, volatility, price, change] = seed;
-  const [, fallbackCredit] = sectorImages[sector];
+  const [sectorImageUrl, sectorImageCredit] = sectorImages[sector];
   const officialWebsite = officialSites[id];
   const sensitivities = { ...sectorSensitivity[sector], ...companyOverrides[id] };
   const influenceAreas = Object.entries(sensitivities).sort((a,b)=>Math.abs(b[1]??0)-Math.abs(a[1]??0)).slice(0,5).map(([factor,value])=>`${factor} ${Number(value)>0?"수혜":"부담"}`);
@@ -95,8 +95,8 @@ export const realCompanies: Company[] = seeds.map((seed, index) => {
     id, code, name, market, sector, description, cap, volatility, price, change,
     traits: [cap + "주", volatility === "높음" ? "고변동성" : "시장 대표", sector + " 민감"],
     history: [base * .92, base * .96, base * .94, base * .98, base].map(Math.round),
-    imageUrl: `https://image.thum.io/get/width/1200/crop/650/noanimate/${officialWebsite}`,
-    imageCredit: `${name} 공식 홈페이지 화면 · ${fallbackCredit.split(" · ")[0]} 대체 이미지`,
+    imageUrl: sectorImageUrl,
+    imageCredit: `${sectorImageCredit} · ${sector} 관련 이미지`,
     founded: `${1965 + (index * 3) % 48}년`, employees: `${(1200 + index * 731).toLocaleString()}명`,
     gameRevenue: 3800 + index * 1470, gameOperatingMargin: Number((5.4 + (index % 9) * 1.7).toFixed(1)),
     officialWebsite, influenceAreas, sensitivities,
