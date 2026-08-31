@@ -7,24 +7,11 @@ import { SiteHeader } from "@/components/site-header";
 import { Button, Delta, PageHeader, Shell } from "@/components/ui";
 import { classifyInvestorProfile, investorProfiles } from "@/lib/investor-profiles";
 import { getNewsSequence } from "@/lib/news-engine";
+import { calculateInvestorMetrics } from "@/lib/investor-metrics";
 import type { FinalResult, InvestorMetrics, Team } from "@/lib/types";
 
 function localMetrics(team: Team): InvestorMetrics {
-  const turnover = Math.min(100, team.turnoverRate);
-  return {
-    concentration: 50,
-    sectorCount: 3,
-    volatility: Math.min(100, Math.abs(team.turnReturn) * 8 + turnover * 0.35),
-    turnover,
-    newsReaction: Math.min(100, turnover * 1.2),
-    contrarian: Math.min(100, 35 + Math.max(0, -team.totalReturn) * 2),
-    holdDuration: Math.max(0, 100 - turnover),
-    dipBuying: Math.min(100, 40 + Math.max(0, -team.turnReturn) * 5),
-    profitTaking: Math.min(100, 35 + Math.max(0, team.totalReturn) * 3),
-    largeCapShare: 50,
-    smallCapShare: 50,
-    timingScore: Math.min(100, 45 + Math.max(0, team.turnReturn) * 5),
-  };
+  return calculateInvestorMetrics(team.portfolio??[],team.previousPortfolio??[],team.turnoverRate,team.turnReturn,team.totalReturn);
 }
 
 function resultFromTeam(team: Team): FinalResult {

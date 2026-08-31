@@ -40,7 +40,7 @@ const companyOverrides: Record<string, Partial<Record<MarketFactor, number>>> = 
   "hd-ksoe":{운임:1.4,원달러환율:1.0}, "korean-air":{유가:-1.65,원달러환율:-1.1,소비심리:1.0}, amorepacific:{원달러환율:.55,소비심리:1.1}, emart:{소비심리:1.4,금리:-.8},
 };
 
-type Seed = [string,string,string,Market,Sector,string,"대형"|"중형"|"소형","낮음"|"보통"|"높음",number,number];
+type Seed = [string,string,string,"코스피아"|"코스닥크",Sector,string,"대형"|"중형"|"소형","낮음"|"보통"|"높음",number,number];
 const seeds: Seed[] = [
   ["samsung-electronics","005930","삼성전자","코스피아","AI·반도체","메모리·파운드리·모바일을 아우르는 종합 전자기업","대형","보통",74200,4.8],
   ["sk-hynix","000660","SK하이닉스","코스피아","AI·반도체","HBM과 메모리 반도체를 주력으로 하는 기업","대형","높음",186500,8.4],
@@ -85,7 +85,8 @@ const seeds: Seed[] = [
 ];
 
 export const realCompanies: Company[] = seeds.map((seed, index) => {
-  const [id, code, name, market, sector, description, cap, volatility, price, change] = seed;
+  const [id, code, name, legacyMarket, sector, description, cap, volatility, price, change] = seed;
+  const market: Market = legacyMarket === "코스피아" ? "코스피" : "코스닥";
   const [sectorImageUrl, sectorImageCredit] = sectorImages[sector];
   const officialWebsite = officialSites[id];
   const sensitivities = { ...sectorSensitivity[sector], ...companyOverrides[id] };

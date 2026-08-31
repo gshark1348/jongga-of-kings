@@ -9,35 +9,27 @@ import {
   ShieldCheck,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useGame } from "@/components/game-provider";
 import { NewsPaperPopup } from "@/components/news-paper-popup";
 import { SiteHeader } from "@/components/site-header";
 import { Button, Delta, Shell } from "@/components/ui";
 import { companies, sectorPerformance, sectors } from "@/lib/mock-data";
 import { getNewsIssue } from "@/lib/news-engine";
-import {
-  BANK_NAME,
-  getBorrowingLimit,
-  getNetAssets,
-} from "@/lib/market-engine";
+import { getNetAssets } from "@/lib/market-engine";
 
 export default function TeamGame() {
   const {
-    initialBudget,
     turn,
     teams,
     currentTeam,
     currentPortfolio,
-    loanRate,
-    baseRate,
-    activeRateHeadline,
-    borrow,
-    repay,
     status,
     gameCode,
   } = useGame();
-  const [loanAmount, setLoanAmount] = useState(10000000);
+  const router=useRouter();
+  useEffect(()=>{if(status==="finished")router.replace("/results")},[router,status]);
   const initialSetup = turn === 1;
   const issue = getNewsIssue(gameCode, turn);
   if (!currentTeam)
@@ -54,7 +46,6 @@ export default function TeamGame() {
       </>
     );
   const team = currentTeam;
-  const loanLimit = getBorrowingLimit(initialBudget, team.loanBalance);
   const positions = currentPortfolio.length
     ? currentPortfolio
     : [
@@ -239,60 +230,6 @@ export default function TeamGame() {
             </strong>
           </div>
         </div>
-        <section className="bank-desk">
-          <div className="bank-title">
-            <Landmark size={19} />
-            <div>
-              <small>ONE BANK · TURN LOAN</small>
-              <strong>{BANK_NAME}</strong>
-            </div>
-          </div>
-          <div className="rate-quote">
-            <span>
-              기준금리 <b>{baseRate.toFixed(2)}%</b>
-            </span>
-            <span>
-              대출금리 <b>{loanRate.toFixed(2)}%</b>
-            </span>
-            <small>{activeRateHeadline}</small>
-          </div>
-          <label>
-            <span>거래 금액</span>
-            <select
-              value={loanAmount}
-              onChange={(event) => setLoanAmount(Number(event.target.value))}
-            >
-              <option value="5000000">500만원</option>
-              <option value="10000000">1,000만원</option>
-              <option value="20000000">2,000만원</option>
-            </select>
-          </label>
-          <div className="bank-actions">
-            <Button
-              variant="gold"
-              disabled={loanAmount > loanLimit}
-              onClick={() => void borrow(team.id, loanAmount)}
-            >
-              대출 실행
-            </Button>
-            <Button
-              variant="paper"
-              disabled={team.loanBalance + team.accruedInterest === 0}
-              onClick={() =>
-                void repay(
-                  team.id,
-                  Math.min(loanAmount, team.loanBalance + team.accruedInterest),
-                )
-              }
-            >
-              상환
-            </Button>
-          </div>
-          <p>
-            한도 ₩{(loanLimit / 1000000).toFixed(0)}M · 매 턴 이자 부과 · 최종
-            순자산에서 원금과 이자 차감
-          </p>
-        </section>
         <div className="team-console-grid">
           <section className="compact-panel portfolio-panel">
             <div className="compact-panel-head">
@@ -367,11 +304,11 @@ export default function TeamGame() {
             </div>
             <div className="index-pair">
               <div>
-                <small>코스피아</small>
+                <small>코스피</small>
                 <strong className="up">2,874.21 ▲</strong>
               </div>
               <div>
-                <small>코스닥크</small>
+                <small>코스닥</small>
                 <strong className="down">912.48 ▼</strong>
               </div>
             </div>

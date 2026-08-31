@@ -1,4 +1,4 @@
-export type Market = "코스피아" | "코스닥크";
+export type Market = "코스피" | "코스닥";
 export type Sector =
   | "AI·반도체"
   | "플랫폼·콘텐츠"
@@ -47,6 +47,8 @@ export interface Team {
   turnoverRate: number;
   loanBalance: number;
   accruedInterest: number;
+  portfolio?: PortfolioPosition[];
+  previousPortfolio?: PortfolioPosition[];
 }
 
 export interface RateEvent {

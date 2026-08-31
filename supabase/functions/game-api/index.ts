@@ -7,6 +7,7 @@ const reply=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status
 const digest=async(value:string)=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(value)))).map(byte=>byte.toString(16).padStart(2,"0")).join("");
 const newToken=()=>`${crypto.randomUUID()}${crypto.randomUUID()}`.replaceAll("-","");
 const newGameCode=()=>{const alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";return Array.from({length:6},()=>alphabet[Math.floor(Math.random()*alphabet.length)]).join("")};
+const MAX_LOAN_AMOUNT=50_000_000;
 
 async function gameByCode(code:string){const{data}=await db.from("games").select("*").eq("code",code).maybeSingle();return data;}
 async function validAdmin(gameId:string,token:string){if(!token)return false;const{data}=await db.from("game_admin_secrets").select("token_hash").eq("game_id",gameId).maybeSingle();return data?.token_hash===await digest(token);}
@@ -81,9 +82,10 @@ Deno.serve(async request=>{
 
     if(action==="loan"){
       if(game.status!=="playing")return reply({error:"관리자가 게임을 시작한 뒤 대출을 이용할 수 있습니다."},409);
+      if(game.current_turn===1)return reply({error:"첫 포트폴리오 편성 중에는 대출을 이용할 수 없습니다."},409);
       const teamId=String(body.teamId??"");if(!await validTeam(teamId,String(body.teamToken??"")))return reply({error:"팀 인증이 만료되었습니다."},403);
       const{data:team}=await db.from("teams").select("*").eq("id",teamId).single();const amount=Math.max(0,Math.round(Number(body.amount??0)));const mode=body.mode==="repay"?"repay":"borrow";
-      if(mode==="borrow"){const limit=game.initial_budget*.5-team.loan_balance;if(amount<=0||amount>limit)return reply({error:"대출 한도를 초과했습니다."},400);team.assets+=amount;team.loan_balance+=amount;}
+      if(mode==="borrow"){const limit=Math.min(game.initial_budget*.5,MAX_LOAN_AMOUNT)-team.loan_balance;if(amount<=0||amount>limit)return reply({error:"게임 최대 대출 한도를 초과했습니다."},400);team.assets+=amount;team.loan_balance+=amount;}
       else{const due=team.loan_balance+team.accrued_interest;if(amount<=0||amount>due||amount>team.assets)return reply({error:"상환 금액을 확인해주세요."},400);const interest=Math.min(amount,team.accrued_interest);team.assets-=amount;team.accrued_interest-=interest;team.loan_balance=Math.max(0,team.loan_balance-(amount-interest));}
       await db.from("teams").update({assets:team.assets,loan_balance:team.loan_balance,accrued_interest:team.accrued_interest}).eq("id",teamId);await db.from("team_standings").update({net_assets:team.assets-team.loan_balance-team.accrued_interest,updated_at:new Date().toISOString()}).eq("team_id",teamId);return reply({team});
     }
@@ -91,12 +93,14 @@ Deno.serve(async request=>{
     if(action==="start"||action==="advance"){
       if(!await validAdmin(game.id,String(body.adminToken??"")))return reply({error:"관리자 인증이 필요합니다."},403);
       if(action==="start"){const{count}=await db.from("teams").select("id",{count:"exact",head:true}).eq("game_id",game.id);if((count??0)<2)return reply({error:"최소 2개 팀이 필요합니다."},400);await db.from("games").update({status:"playing",current_turn:1,updated_at:new Date().toISOString()}).eq("id",game.id);return reply({ok:true});}
-      const returns=(body.returns??{}) as Record<string,number>;const nextRate=Math.min(7,Math.max(1,Number(body.baseRate??game.base_rate)));const{data:teams}=await db.from("teams").select("*").eq("game_id",game.id);
+      const returns=(body.returns??{}) as Record<string,number>;const investorMetrics=(body.investorMetrics??{}) as Record<string,Record<string,number>>;const nextRate=Math.min(7,Math.max(1,Number(body.baseRate??game.base_rate)));const{data:teams}=await db.from("teams").select("*").eq("game_id",game.id);
       if(game.current_turn===1){for(const team of teams??[]){const portfolio=Array.isArray(team.portfolio)?team.portfolio:[];await db.from("teams").update({previous_portfolio:portfolio,submitted:false,turnover_rate:0}).eq("id",team.id);await db.from("team_standings").update({submitted:false,updated_at:new Date().toISOString()}).eq("team_id",team.id);}await db.from("games").update({current_turn:2,base_rate:nextRate,updated_at:new Date().toISOString()}).eq("id",game.id);return reply({ok:true,newsReleased:true});}
       const ranked=[];
       for(const team of teams??[]){const portfolio=Array.isArray(team.portfolio)?team.portfolio:[];const marketReturn=portfolio.reduce((sum:number,item:{companyId:string;weight:number})=>sum+(Number(returns[item.companyId]??0)*Number(item.weight)/100),0);const assets=Math.round(team.assets*(1+marketReturn/100));const interest=Math.round(team.loan_balance*(nextRate+game.loan_spread)/100/4);const accrued=team.accrued_interest+interest;const net=assets-team.loan_balance-accrued;ranked.push({...team,assets,accrued_interest:accrued,turn_return:marketReturn,total_return:Number(((net/game.initial_budget-1)*100).toFixed(2)),submitted:false,previous_rank:team.rank,net});}
       ranked.sort((a,b)=>b.net-a.net);for(let index=0;index<ranked.length;index++){const team=ranked[index];await db.from("teams").update({assets:team.assets,accrued_interest:team.accrued_interest,turn_return:team.turn_return,total_return:team.total_return,submitted:false,previous_portfolio:team.portfolio,previous_rank:team.previous_rank,rank:index+1}).eq("id",team.id);await db.from("team_standings").upsert({team_id:team.id,game_id:game.id,team_name:team.name,rank:index+1,net_assets:team.net,total_return:team.total_return,submitted:false,updated_at:new Date().toISOString()});}
-      const nextTurn=game.current_turn+1;await db.from("games").update({status:nextTurn>game.total_turns?"finished":"playing",current_turn:Math.min(nextTurn,game.total_turns),base_rate:nextRate,updated_at:new Date().toISOString()}).eq("id",game.id);return reply({ok:true});
+      const nextTurn=game.current_turn+1;const finished=nextTurn>game.total_turns;await db.from("games").update({status:finished?"finished":"playing",current_turn:Math.min(nextTurn,game.total_turns),base_rate:nextRate,updated_at:new Date().toISOString()}).eq("id",game.id);
+      if(finished){for(const team of ranked){const metrics={...(investorMetrics[team.id]??{}),volatility:Math.min(100,Number(investorMetrics[team.id]?.volatility??50)+Math.abs(team.turn_return)*3),timingScore:Math.max(0,Math.min(100,50+team.turn_return*5+team.total_return*1.5)),profitTaking:Math.min(100,30+Math.max(0,team.total_return)*3+Number(investorMetrics[team.id]?.turnover??0)*.2),dipBuying:Math.min(100,30+Math.max(0,-team.turn_return)*6+Number(investorMetrics[team.id]?.turnover??0)*.25)};await db.from("final_results").update({investor_metrics:metrics,turn_return:Number(team.turn_return.toFixed(2))}).eq("game_id",game.id).eq("team_name",team.name);}}
+      return reply({ok:true,finished});
     }
     return reply({error:"지원하지 않는 작업입니다."},400);
   }catch(error){return reply({error:error instanceof Error?error.message:"서버 오류가 발생했습니다."},500)}

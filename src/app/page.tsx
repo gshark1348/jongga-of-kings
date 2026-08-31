@@ -27,7 +27,7 @@ export default function Home() {
         <p className="eyebrow">가상 증권시장 전략 게임</p>
         <h1>뉴스를 읽고,<br/><em>시장을 지배하라.</em></h1>
         <p>팀과 함께 포트폴리오를 설계하고, 매 턴 펼쳐지는 시장의 변화를 가장 먼저 읽어내세요.</p>
-        <div className="market-tape"><span>KOSPIA <b className="up">▲ 2.14%</b></span><span>KOSDAQK <b className="down">▼ 0.72%</b></span><span>MARKET MOOD <b>과열</b></span></div>
+        <div className="market-tape"><span>KOSPI <b className="up">▲ 2.14%</b></span><span>KOSDAQ <b className="down">▼ 0.72%</b></span><span>MARKET MOOD <b>GAME READY</b></span></div>
       </div>
       <div className="entry-grid">
         <button className="entry entry-primary" onClick={() => setPanel("team")}><span>01 / PLAYER</span><Users/><strong>팀으로 참가하기</strong><small>팀명만 입력하고 바로 입장</small><ArrowRight className="entry-arrow"/></button>

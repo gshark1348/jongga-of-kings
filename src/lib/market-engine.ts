@@ -4,6 +4,7 @@ export const BANK_NAME = "종가중앙은행";
 export const DEFAULT_BASE_RATE = 3;
 export const BANK_SPREAD = 1.5;
 export const MAX_LOAN_RATIO = 0.5;
+export const MAX_LOAN_AMOUNT = 50_000_000;
 
 const rateSensitivity: Record<Sector, number> = {
   "AI·반도체": -1.1, "플랫폼·콘텐츠": -1.35, "자동차·배터리": -0.8,
@@ -14,7 +15,7 @@ const rateSensitivity: Record<Sector, number> = {
 export function getLoanRate(baseRate: number) { return Number((baseRate + BANK_SPREAD).toFixed(2)); }
 export function getTurnInterest(balance: number, annualRate: number) { return Math.round(balance * annualRate / 100 / 4); }
 export function getNetAssets(team: Team) { return team.assets - team.loanBalance - team.accruedInterest; }
-export function getBorrowingLimit(initialBudget: number, loanBalance: number) { return Math.max(0, initialBudget * MAX_LOAN_RATIO - loanBalance); }
+export function getBorrowingLimit(initialBudget: number, loanBalance: number) { return Math.max(0, Math.min(initialBudget * MAX_LOAN_RATIO, MAX_LOAN_AMOUNT) - loanBalance); }
 export function getRateSectorImpact(sector: Sector, rateChange: number) {
   return Number((rateSensitivity[sector] * rateChange * 3.2).toFixed(2));
 }
@@ -42,7 +43,7 @@ export function calculateCompanyReturn(company: Company, issue: NewsIssue, turn:
       if (Math.abs(contribution) >= .04) breakdown.push({ factor, contribution });
     }
   });
-  const marketDrift = issue.factors.시장공포 ? -Math.abs(issue.factors.시장공포) * .42 : .18;
+  const marketDrift = issue.factors.시장공포 ? -issue.factors.시장공포 * .42 : .18;
   breakdown.push({ factor:"시장공통", contribution:marketDrift });
   const hash = [...`${company.id}-${issue.id}-${turn}`].reduce((sum,char)=>sum+char.charCodeAt(0),0);
   const idiosyncratic = ((hash % 17) - 8) / 10;

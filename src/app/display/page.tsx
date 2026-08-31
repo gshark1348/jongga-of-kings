@@ -1,14 +1,16 @@
 "use client";
 import { Maximize, Pause, Play } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useGame } from "@/components/game-provider";
 import { Brand, Delta } from "@/components/ui";
 import { companies } from "@/lib/mock-data";
-import { getNewsIssue } from "@/lib/news-engine";
+import { getMarketMood, getNewsIssue } from "@/lib/news-engine";
 
 const modes = ["종합 현황", "뉴스 집중", "랭킹 집중", "시장 현황"];
 export default function Display() {
   const { teams, status, turn, totalTurns, gameCode } = useGame();
+  const router = useRouter();
   const [mode, setMode] = useState(0);
   const [auto, setAuto] = useState(false);
   useEffect(() => {
@@ -19,8 +21,10 @@ export default function Display() {
     );
     return () => clearInterval(id);
   }, [auto]);
+  useEffect(() => { if (status === "finished") router.replace("/results"); }, [router, status]);
   const initialSetup = turn === 1;
   const issue = getNewsIssue(gameCode, turn);
+  const marketMood = getMarketMood(gameCode, turn);
   if (status === "lobby")
     return (
       <main className="display-page">
@@ -118,8 +122,8 @@ export default function Display() {
             <section className="editorial-grid">
               <div className="newspaper">
                 <div className="newspaper-meta">
-                  <span>KOSPIA ECONOMIC REVIEW</span>
-                  <span>MARKET MOOD / 과열</span>
+                  <span>KOSPI ECONOMIC REVIEW</span>
+                  <span>MARKET MOOD / {marketMood.label} {marketMood.score}</span>
                 </div>
                 <div
                   className="display-news-photo"
@@ -154,11 +158,11 @@ export default function Display() {
             </section>
             <div className="market-strip">
               <div>
-                <small>코스피아</small>
+                <small>코스피</small>
                 <strong className="up">2,874.21 ▲</strong>
               </div>
               <div>
-                <small>코스닥크</small>
+                <small>코스닥</small>
                 <strong className="down">912.48 ▼</strong>
               </div>
               <div>
@@ -167,7 +171,7 @@ export default function Display() {
               </div>
               <div>
                 <small>시장 심리</small>
-                <strong>과열 78.4</strong>
+                <strong>{marketMood.label} {marketMood.score}</strong>
               </div>
             </div>
             <div className="ticker">

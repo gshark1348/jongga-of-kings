@@ -84,3 +84,19 @@ export function getNewsIssue(gameCode: string, turn: number) {
 export function getMarketState(gameCode: string, turn: number) {
   return getNewsSequence(gameCode, Math.max(0, turn - 1)).reduce(applyEvent, { ...initialState });
 }
+
+export function getMarketMood(gameCode: string, turn: number) {
+  if (turn < 2) return { label: "개장 전", score: 50 };
+  const state = getMarketState(gameCode, turn);
+  const score = clamp((state.risk * .45) + (state.growth * .25) + (state.liquidity * .2) - (state.credit * .1));
+  const label = state.credit >= 70 || score < 32 ? "공포" : state.techHeat >= 70 || score >= 72 ? "과열" : score >= 62 ? "강세" : score < 43 ? "위축" : state.growth >= 56 ? "회복" : "중립";
+  return { label, score: Number(score.toFixed(1)) };
+}
+
+export function getIssueMood(issue: MarketEvent) {
+  if (issue.phase === "과열") return "과열";
+  if (issue.phase === "충격" || issue.phase === "조정") return "위축";
+  if (issue.phase === "회복") return "회복";
+  if ((issue.factors.시장공포 ?? 0) >= 1) return "공포";
+  return issue.phase === "확산" ? "강세" : "중립";
+}
