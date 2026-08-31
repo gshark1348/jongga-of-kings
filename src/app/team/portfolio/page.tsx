@@ -7,7 +7,7 @@ import { SiteHeader } from "@/components/site-header";
 import { useGame } from "@/components/game-provider";
 import { Button, Delta, MiniChart, Shell } from "@/components/ui";
 import { companies, sectors } from "@/lib/mock-data";
-import { getNewsIssue } from "@/lib/news-engine";
+import { getNewsSequence } from "@/lib/news-engine";
 import type { Company, PortfolioPosition, Sector } from "@/lib/types";
 import { calculatePortfolioTurnover } from "@/lib/portfolio-turnover";
 import { CompanyDetailPopup } from "@/components/company-detail-popup";
@@ -22,7 +22,7 @@ export default function Portfolio() {
   const [detailCompany,setDetailCompany]=useState<Company|null>(null);
   useEffect(()=>{if(currentPortfolio.length&&!editing)queueMicrotask(()=>setPositions(currentPortfolio))},[currentPortfolio,editing]);
   useEffect(()=>{queueMicrotask(()=>setSubmitted(Boolean(currentTeam?.submitted)))},[currentTeam?.submitted]);
-  const total=positions.reduce((sum,position)=>sum+position.weight,0); const remaining=Math.max(0,100-total); const initialSetup=turn===1; const issue=getNewsIssue(gameCode,turn);
+  const total=positions.reduce((sum,position)=>sum+position.weight,0); const remaining=Math.max(0,100-total); const initialSetup=turn===1; const issueSequence=getNewsSequence(gameCode,Math.max(0,turn-1)); const issue=issueSequence.at(-1)??null; const previousIssues=issueSequence.slice(-3,-1);
   const previousPositions=turn===1?[]:currentBaselinePortfolio; const turnover=calculatePortfolioTurnover(previousPositions,positions); const firstTurn=turn===1; const turnoverMet=firstTurn||turnover>=minimumTurnover; const canSubmit=total===100&&positions.length>0&&turnoverMet;
   const visibleCompanies=useMemo(()=>companies.filter(company=>(market==="전체"||company.market===market)&&company.name.includes(query)),[market,query]);
   function markEdited(){setEditing(true);if(submitted){setSubmitted(false);void reopenPortfolio().then(success=>{if(!success)setSubmitted(true)})}}
@@ -31,7 +31,7 @@ export default function Portfolio() {
   function changeWeight(id:string,value:number){const position=positions.find(item=>item.companyId===id);if(!position)return;const nextWeight=Math.max(0,Math.min(position.weight+remaining,value));if(nextWeight===position.weight)return;setPositions(positions.map(item=>item.companyId===id?{...item,weight:nextWeight}:item));markEdited()}
   async function submit(){const largest=[...positions].sort((a,b)=>b.weight-a.weight)[0];const focus=companies.find(company=>company.id===largest.companyId)?.sector??"AI·반도체";if(await submitPortfolio(positions,focus)){setEditing(false);setSubmitted(true)}}
   const companyEvents=useMemo(()=>initialSetup?[]:getCompanyEvents(turn),[initialSetup,turn]);
-  function displayChange(company:Company){return issue?calculateCompanyReturn(company,issue,turn,0,companyEvents).total:0}
+  function displayChange(company:Company){return issue?calculateCompanyReturn(company,issue,turn,0,companyEvents,previousIssues).total:0}
   if(status!=="playing")return <><SiteHeader/><Shell><section className="portfolio-locked"><LockKeyhole size={34}/><p className="eyebrow">PORTFOLIO ACCESS · LOCKED</p><h1>{status==="lobby"?"아직 시장이 열리지 않았습니다":"현재 포트폴리오를 편집할 수 없습니다"}</h1><p>{status==="lobby"?"관리자가 게임을 시작하면 초기 포트폴리오 편성 화면이 자동으로 열립니다. 대기 화면에서 진행 방법을 먼저 확인해주세요.":"시장 계산 또는 게임 종료 상태에서는 포트폴리오가 잠깁니다."}</p><Link href={status==="finished"?"/results":"/team/game"}><Button variant="paper">{status==="finished"?"최종 결과 보기":"팀 대기 화면으로"}</Button></Link></section></Shell></>;
   return <><SiteHeader/><main className="portfolio-workspace">
     <section className={`portfolio-newsline ${initialSetup?"preopen-newsline":""}`}><div className="portfolio-headline"><span className="mono">{initialSetup?"PRE-OPEN · INITIAL SETUP":`NOW · 제${turn}턴 헤드라인`}</span><strong>{issue?.headline??"개장 전입니다 — 초기 포트폴리오를 먼저 구성하세요"}</strong></div><div className="market-marquee"><div className="market-marquee-track">{[...companies.slice(0,12),...companies.slice(0,12)].map((company,index)=><span key={`${company.id}-${index}`}><b>{company.name}</b> ₩{company.price.toLocaleString()} {initialSetup?<em>기준가</em>:<Delta value={displayChange(company)}/>}</span>)}</div></div></section>

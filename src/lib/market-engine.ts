@@ -20,7 +20,7 @@ export function getRateSectorImpact(sector: Sector, rateChange: number) {
 }
 
 export interface ReturnBreakdown { factor: MarketFactor | "시장공통" | "기업고유" | "기업단독" | "동종업계"; contribution: number }
-export function calculateCompanyReturn(company: Company, issue: NewsIssue, turn: number, rateChange = 0, companyEvents: CompanyEvent[] = []) {
+export function calculateCompanyReturn(company: Company, issue: NewsIssue, turn: number, rateChange = 0, companyEvents: CompanyEvent[] = [], previousIssues: NewsIssue[] = []) {
   const breakdown: ReturnBreakdown[] = [];
   for (const [factor, shock] of Object.entries(issue.factors) as [MarketFactor, number][]) {
     const sensitivity = company.sensitivities[factor] ?? .08;
@@ -34,6 +34,14 @@ export function calculateCompanyReturn(company: Company, issue: NewsIssue, turn:
     else if (event.sector === company.sector) breakdown.push({factor:"동종업계",contribution:event.directImpact * -.12});
     else breakdown.push({factor:"시장공통",contribution:event.directImpact * .012});
   }
+  previousIssues.slice(-2).forEach((pastIssue, index, history) => {
+    const decay = index === history.length - 1 ? .28 : .12;
+    for (const [factor, shock] of Object.entries(pastIssue.factors) as [MarketFactor, number][]) {
+      const sensitivity = company.sensitivities[factor] ?? .05;
+      const contribution = shock * sensitivity * 2.15 * decay;
+      if (Math.abs(contribution) >= .04) breakdown.push({ factor, contribution });
+    }
+  });
   const marketDrift = issue.factors.시장공포 ? -Math.abs(issue.factors.시장공포) * .42 : .18;
   breakdown.push({ factor:"시장공통", contribution:marketDrift });
   const hash = [...`${company.id}-${issue.id}-${turn}`].reduce((sum,char)=>sum+char.charCodeAt(0),0);
