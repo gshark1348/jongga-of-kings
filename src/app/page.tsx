@@ -38,7 +38,7 @@ export default function Home() {
     </section>
 
     <section className="steps">
-      <div><span>01</span><BarChart3/><h2>포트폴리오 구성</h2><p>최대 5개 종목에 자산 100%를 배분합니다.</p></div>
+      <div><span>01</span><BarChart3/><h2>포트폴리오 구성</h2><p>최대 8개 종목에 자산 100%를 배분합니다.</p></div>
       <div><span>02</span><BookOpen/><h2>뉴스와 시장 변동</h2><p>헤드라인과 단신 속 연결된 신호를 읽습니다.</p></div>
       <div><span>03</span><MonitorUp/><h2>최종 수익률 경쟁</h2><p>마지막 종이 울릴 때 가장 높은 자산을 지키세요.</p></div>
     </section>

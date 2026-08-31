@@ -5,8 +5,8 @@ import { Crown, RotateCcw, ShieldCheck, Sparkles, TriangleAlert } from "lucide-r
 import { useGame } from "@/components/game-provider";
 import { SiteHeader } from "@/components/site-header";
 import { Button, Delta, PageHeader, Shell } from "@/components/ui";
-import { news } from "@/lib/mock-data";
 import { classifyInvestorProfile, investorProfiles } from "@/lib/investor-profiles";
+import { getNewsSequence } from "@/lib/news-engine";
 import type { FinalResult, InvestorMetrics, Team } from "@/lib/types";
 
 function localMetrics(team: Team): InvestorMetrics {
@@ -43,7 +43,7 @@ export default function Results() {
   const { finalResults, teams, status, gameCode, initialBudget, totalTurns, loading } = useGame();
   const results = (finalResults.length ? finalResults : teams.map(resultFromTeam)).toSorted((a, b) => a.rank - b.rank);
   const winner = results[0];
-  const issueHistory = news.slice(0, Math.max(0, totalTurns - 1));
+  const issueHistory = getNewsSequence(gameCode, Math.max(0, totalTurns - 1));
 
   if (loading && !winner) {
     return <><SiteHeader/><Shell><section className="portfolio-locked"><p className="eyebrow">FINAL CLEARING</p><h1>최종 장부를 불러오고 있습니다</h1></section></Shell></>;

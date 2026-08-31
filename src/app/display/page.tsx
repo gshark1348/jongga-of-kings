@@ -3,7 +3,8 @@ import { Maximize, Pause, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGame } from "@/components/game-provider";
 import { Brand, Delta } from "@/components/ui";
-import { companies, news } from "@/lib/mock-data";
+import { companies } from "@/lib/mock-data";
+import { getNewsIssue } from "@/lib/news-engine";
 import { getCompanyEvents } from "@/lib/company-events";
 
 const modes = ["종합 현황", "뉴스 집중", "랭킹 집중", "시장 현황"];
@@ -20,7 +21,7 @@ export default function Display() {
     return () => clearInterval(id);
   }, [auto]);
   const initialSetup = turn === 1;
-  const issue = initialSetup ? null : news[(turn - 2) % news.length];
+  const issue = getNewsIssue(gameCode, turn);
   const companyEvents = initialSetup ? [] : getCompanyEvents(turn);
   if (status === "lobby")
     return (

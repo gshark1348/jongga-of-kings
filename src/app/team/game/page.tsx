@@ -14,7 +14,8 @@ import { useGame } from "@/components/game-provider";
 import { NewsPaperPopup } from "@/components/news-paper-popup";
 import { SiteHeader } from "@/components/site-header";
 import { Button, Delta, Shell } from "@/components/ui";
-import { companies, news, sectorPerformance, sectors } from "@/lib/mock-data";
+import { companies, sectorPerformance, sectors } from "@/lib/mock-data";
+import { getNewsIssue } from "@/lib/news-engine";
 import {
   BANK_NAME,
   getBorrowingLimit,
@@ -38,7 +39,7 @@ export default function TeamGame() {
   } = useGame();
   const [loanAmount, setLoanAmount] = useState(10000000);
   const initialSetup = turn === 1;
-  const issue = initialSetup ? null : news[(turn - 2) % news.length];
+  const issue = getNewsIssue(gameCode, turn);
   if (!currentTeam)
     return (
       <>
@@ -118,7 +119,7 @@ export default function TeamGame() {
               <small>STEP 01</small>
               <h2>초기 포트폴리오 편성</h2>
               <p>
-                관리자가 게임을 시작하면 초기 예산을 1~5개 기업에 배분합니다.
+                관리자가 게임을 시작하면 초기 예산을 1~8개 기업에 배분합니다.
                 비중 합계는 정확히 100%여야 합니다. 첫 편성에는 최소 변경률이
                 적용되지 않습니다.
               </p>
@@ -202,7 +203,7 @@ export default function TeamGame() {
             <span className="mono">BEFORE THE OPENING BELL</span>
             <strong>아직 시장 뉴스가 없습니다.</strong>
             <p>
-              초기 예산을 1~5개 기업에 100% 배분하세요. 모든 팀이 제출하면 첫
+              초기 예산을 1~8개 기업에 100% 배분하세요. 모든 팀이 제출하면 첫
               뉴스와 함께 시장이 움직입니다.
             </p>
           </div>
