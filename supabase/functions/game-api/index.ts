@@ -51,7 +51,8 @@ Deno.serve(async request=>{
     }
 
     if(action==="sync"){
-      const result:{game:unknown;standings:unknown;team?:unknown;teams?:unknown}={game,standings:await standings(game.id)};
+      const{data:finalResults}=game.status==="finished"?await db.from("final_results").select("id,team_number,team_name,final_rank,final_net_assets,total_return,turn_return,investor_metrics").eq("game_id",game.id).order("final_rank"):{data:[]};
+      const result:{game:unknown;standings:unknown;finalResults:unknown;team?:unknown;teams?:unknown}={game,standings:await standings(game.id),finalResults:finalResults??[]};
       if(body.teamId&&await validTeam(String(body.teamId),String(body.teamToken??""))){const{data}=await db.from("teams").select("*").eq("id",body.teamId).eq("game_id",game.id).single();result.team=data;}
       if(await validAdmin(game.id,String(body.adminToken??""))){const{data}=await db.from("teams").select("*").eq("game_id",game.id).order("rank");result.teams=data??[];}
       return reply(result);

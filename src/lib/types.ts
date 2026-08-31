@@ -115,3 +115,13 @@ export interface InvestorProfile {
   caution: string;
   stamp: string;
 }
+
+export interface FinalResult {
+  id: string;
+  teamName: string;
+  rank: number;
+  assets: number;
+  totalReturn: number;
+  turnReturn: number;
+  metrics: InvestorMetrics;
+}
