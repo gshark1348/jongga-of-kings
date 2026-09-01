@@ -22,32 +22,36 @@ export const investorProfiles: InvestorProfile[] = [
 const profile = (id: string) => investorProfiles.find((item) => item.id === id)!;
 
 export function classifyInvestorProfile(m: InvestorMetrics): InvestorProfile {
+  const sectors = Math.min(100, Math.max(0, (m.sectorCount - 1) * 20));
+  const diversification = Math.min(100, (100 - m.concentration) * .75 + sectors * .25);
+  const capBalance = Math.max(0, 100 - Math.abs(m.largeCapShare - m.smallCapShare));
+  const gate = (eligible: boolean, bonus = 32) => eligible ? bonus : -bonus;
   const scores: Record<string, number> = {
-    "all-in": m.concentration * 1.5 + (4 - m.sectorCount) * 12,
-    steady: (100 - m.volatility) + m.largeCapShare * .5 - m.turnover * .3,
-    textbook: m.sectorCount * 13 + (100 - m.concentration) * .7,
-    trend: m.newsReaction + m.turnover * .45 - m.contrarian * .2,
-    value: m.contrarian * .7 + m.holdDuration * .8 + (100 - m.newsReaction) * .25,
-    detective: m.newsReaction * 1.05 + m.timingScore * .4,
-    contrarian: m.contrarian * 1.2 + m.dipBuying * .25,
-    panic: (100 - m.holdDuration) * .75 + m.turnover * .55 - m.dipBuying * .2,
-    dip: m.dipBuying * 1.25 + m.holdDuration * .25,
-    profit: m.profitTaking * 1.2 + m.turnover * .35,
-    thrill: m.volatility + m.smallCapShare * .65,
-    bluechip: m.largeCapShare * 1.25 + (100 - m.volatility) * .25,
-    treasure: m.smallCapShare * 1.2 + m.contrarian * .35,
-    rotation: m.turnover + m.sectorCount * 8 + m.newsReaction * .25,
-    timing: m.timingScore * 1.35 + m.profitTaking * .3,
-    fixed: m.holdDuration + (100 - m.turnover) * .7 + (100 - m.newsReaction) * .25,
+    "all-in": m.concentration * .8 + (100 - sectors) * .25 + m.leverage * .15 + gate(m.concentration >= 55 && m.sectorCount <= 3),
+    steady: (100 - m.volatility) * .45 + m.largeCapShare * .25 + (100 - m.turnover) * .2 + (100 - m.leverage) * .1 + gate(m.volatility <= 45 && m.leverage <= 30),
+    textbook: diversification * .55 + capBalance * .2 + (100 - m.volatility) * .15 + (100 - m.leverage) * .1 + gate(m.sectorCount >= 4 && m.concentration <= 40),
+    trend: m.newsReaction * .45 + m.turnover * .25 + m.performance * .2 + m.volatility * .1 + gate(m.newsReaction >= 55 && m.performance >= 48),
+    value: m.contrarian * .35 + m.holdDuration * .35 + (100 - m.newsReaction) * .2 + (100 - m.leverage) * .1 + gate(m.holdDuration >= 65 && m.contrarian >= 45 && m.newsReaction <= 40 && m.turnover <= 35),
+    detective: m.newsReaction * .4 + m.timingScore * .35 + m.profitTaking * .15 + sectors * .1 + gate(m.newsReaction >= 50 && m.timingScore >= 58),
+    contrarian: m.contrarian * .55 + m.dipBuying * .2 + m.holdDuration * .15 + (100 - m.newsReaction) * .1 + gate(m.contrarian >= 60),
+    panic: m.turnover * .4 + (100 - m.performance) * .35 + (100 - m.holdDuration) * .15 + (100 - m.dipBuying) * .1 + gate(m.turnover >= 45 && m.performance <= 45),
+    dip: m.dipBuying * .5 + m.contrarian * .2 + m.holdDuration * .15 + m.leverage * .15 + gate(m.dipBuying >= 58 && m.performance <= 55),
+    profit: m.profitTaking * .5 + m.performance * .25 + m.turnover * .15 + m.timingScore * .1 + gate(m.profitTaking >= 60 && m.performance >= 55),
+    thrill: m.volatility * .4 + m.smallCapShare * .25 + m.leverage * .25 + m.concentration * .1 + gate(m.volatility >= 70 && (m.smallCapShare >= 45 || m.leverage >= 40)),
+    bluechip: m.largeCapShare * .55 + (100 - m.volatility) * .25 + (100 - m.leverage) * .1 + m.holdDuration * .1 + gate(m.largeCapShare >= 65),
+    treasure: m.smallCapShare * .5 + m.contrarian * .2 + m.volatility * .15 + (100 - m.concentration) * .15 + gate(m.smallCapShare >= 65),
+    rotation: m.turnover * .4 + sectors * .3 + m.newsReaction * .2 + diversification * .1 + gate(m.turnover >= 50 && m.sectorCount >= 4),
+    timing: m.timingScore * .45 + m.performance * .3 + m.profitTaking * .15 + m.turnover * .1 + gate(m.timingScore >= 72 && m.performance >= 60),
+    fixed: m.holdDuration * .55 + (100 - m.newsReaction) * .2 + (100 - m.turnover) * .15 + (100 - m.leverage) * .1 + gate(m.turnover <= 15),
   };
   return profile(Object.entries(scores).sort((a,b) => b[1] - a[1])[0][0]);
 }
 
 export const teamInvestorMetrics: Record<string, InvestorMetrics> = {
-  ants:{concentration:92,sectorCount:2,volatility:78,turnover:55,newsReaction:72,contrarian:18,holdDuration:48,dipBuying:52,profitTaking:45,largeCapShare:38,smallCapShare:62,timingScore:67},
-  value:{concentration:42,sectorCount:5,volatility:26,turnover:18,newsReaction:30,contrarian:72,holdDuration:91,dipBuying:63,profitTaking:26,largeCapShare:82,smallCapShare:18,timingScore:54},
-  fullbuy:{concentration:58,sectorCount:4,volatility:83,turnover:74,newsReaction:93,contrarian:32,holdDuration:34,dipBuying:40,profitTaking:62,largeCapShare:22,smallCapShare:78,timingScore:86},
-  cash:{concentration:31,sectorCount:7,volatility:18,turnover:12,newsReaction:21,contrarian:48,holdDuration:88,dipBuying:28,profitTaking:50,largeCapShare:76,smallCapShare:24,timingScore:42},
-  charts:{concentration:54,sectorCount:5,volatility:62,turnover:91,newsReaction:77,contrarian:44,holdDuration:20,dipBuying:35,profitTaking:75,largeCapShare:46,smallCapShare:54,timingScore:72},
-  dividend:{concentration:38,sectorCount:6,volatility:20,turnover:8,newsReaction:14,contrarian:57,holdDuration:96,dipBuying:42,profitTaking:18,largeCapShare:88,smallCapShare:12,timingScore:38},
+  ants:{concentration:92,sectorCount:2,volatility:78,turnover:55,newsReaction:72,contrarian:18,holdDuration:48,dipBuying:52,profitTaking:45,largeCapShare:38,smallCapShare:62,timingScore:67,leverage:40,performance:68},
+  value:{concentration:42,sectorCount:5,volatility:26,turnover:18,newsReaction:30,contrarian:72,holdDuration:91,dipBuying:63,profitTaking:26,largeCapShare:82,smallCapShare:18,timingScore:54,leverage:0,performance:58},
+  fullbuy:{concentration:58,sectorCount:4,volatility:83,turnover:74,newsReaction:93,contrarian:32,holdDuration:34,dipBuying:40,profitTaking:62,largeCapShare:22,smallCapShare:78,timingScore:86,leverage:80,performance:82},
+  cash:{concentration:31,sectorCount:7,volatility:18,turnover:12,newsReaction:21,contrarian:48,holdDuration:88,dipBuying:28,profitTaking:50,largeCapShare:76,smallCapShare:24,timingScore:42,leverage:0,performance:54},
+  charts:{concentration:54,sectorCount:5,volatility:62,turnover:91,newsReaction:77,contrarian:44,holdDuration:20,dipBuying:35,profitTaking:75,largeCapShare:46,smallCapShare:54,timingScore:72,leverage:20,performance:47},
+  dividend:{concentration:38,sectorCount:6,volatility:20,turnover:8,newsReaction:14,contrarian:57,holdDuration:96,dipBuying:42,profitTaking:18,largeCapShare:88,smallCapShare:12,timingScore:38,leverage:0,performance:43},
 };

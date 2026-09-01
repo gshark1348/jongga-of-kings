@@ -120,6 +120,8 @@ export interface InvestorMetrics {
   largeCapShare: number;
   smallCapShare: number;
   timingScore: number;
+  leverage: number;
+  performance: number;
 }
 
 export interface InvestorProfile {

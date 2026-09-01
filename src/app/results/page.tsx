@@ -17,11 +17,11 @@ function characterImage(profile: { id: string; number: number }) {
   return `${characterBasePath}/${profile.number.toString().padStart(2, "0")}-${profile.id}.png`;
 }
 
-function localMetrics(team: Team): InvestorMetrics {
-  return calculateInvestorMetrics(team.portfolio??[],team.previousPortfolio??[],team.turnoverRate,team.turnReturn,team.totalReturn);
+function localMetrics(team: Team, initialBudget: number): InvestorMetrics {
+  return calculateInvestorMetrics(team.portfolio??[],team.previousPortfolio??[],team.turnoverRate,team.turnReturn,team.totalReturn,team.loanBalance,initialBudget);
 }
 
-function resultFromTeam(team: Team): FinalResult {
+function resultFromTeam(team: Team, initialBudget: number): FinalResult {
   return {
     id: team.id,
     teamName: team.name,
@@ -29,13 +29,13 @@ function resultFromTeam(team: Team): FinalResult {
     assets: team.assets - team.loanBalance - team.accruedInterest,
     totalReturn: team.totalReturn,
     turnReturn: team.turnReturn,
-    metrics: localMetrics(team),
+    metrics: localMetrics(team, initialBudget),
   };
 }
 
 export default function Results() {
   const { finalResults, teams, status, gameCode, initialBudget, totalTurns, loading, newsHistory } = useGame();
-  const results = (finalResults.length ? finalResults : teams.map(resultFromTeam)).toSorted((a, b) => a.rank - b.rank);
+  const results = (finalResults.length ? finalResults : teams.map(team=>resultFromTeam(team,initialBudget))).toSorted((a, b) => a.rank - b.rank);
   const winner = results[0];
   const issueHistory = newsHistory.length?newsHistory.map(news=>news.issue):getNewsSequence(gameCode, Math.max(0, totalTurns - 1));
 
@@ -54,7 +54,7 @@ export default function Results() {
     <div className="section-heading"><h2>최종 순위</h2><p>초기 자산 ₩{initialBudget.toLocaleString()}</p></div>
     <div className="table-scroll"><table className="data-table"><thead><tr><th>순위</th><th>팀명</th><th>최종 순자산</th><th>누적 수익률</th><th>마지막 턴</th><th>투자자 유형</th></tr></thead><tbody>{results.map(result=>{const profile=classifyInvestorProfile(result.metrics);return <tr key={result.id}><td className="rank-number">{result.rank.toString().padStart(2,"0")}</td><td><strong>{result.teamName}</strong></td><td className="number">₩{result.assets.toLocaleString()}</td><td><Delta value={result.totalReturn}/></td><td><Delta value={result.turnReturn}/></td><td>{profile.name}</td></tr>})}</tbody></table></div>
 
-    <div className="profile-intro"><div><p className="eyebrow">PORTFOLIO PERSONALITY TEST</p><h2>그래서, 우리는 어떤 투자자였을까?</h2><p>최종 포트폴리오 집중도, 변동성, 변경률과 뉴스 반응을 분석했습니다. 수익률과는 별개로 각 팀만의 투자 습관을 확인해보세요.</p></div><Sparkles size={42}/></div>
+    <div className="profile-intro"><div><p className="eyebrow">PORTFOLIO PERSONALITY TEST</p><h2>그래서, 우리는 어떤 투자자였을까?</h2><p>종목·산업 집중도, 회전율, 시가총액 성향, 수익 대응과 대출 활용을 함께 분석했습니다. 최종 순위와는 별개로 각 팀이 실제로 선택한 전략을 확인해보세요.</p></div><Sparkles size={42}/></div>
     <div className="team-profile-grid">{results.map((result,index)=>{const metrics=result.metrics;const profile=classifyInvestorProfile(metrics);return <article className={`team-profile ${index===0?"profile-featured":""}`} key={result.id}>
       <div className="profile-top"><span className="profile-no">TYPE {profile.number.toString().padStart(2,"0")}</span><span className="profile-stamp">{profile.stamp}</span></div>
       <div className="profile-character"><Image src={characterImage(profile)} alt={`${profile.name} 투자자 캐릭터`} fill sizes="(max-width: 620px) 100vw, 50vw" unoptimized/></div>
