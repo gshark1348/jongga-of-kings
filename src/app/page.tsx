@@ -13,6 +13,15 @@ export default function Home() {
   const [panel, setPanel] = useState<"admin" | "team" | "display" | null>(null);
   const [teamName, setTeamName] = useState("");
   const [gameCode, setGameCode] = useState("");
+  const displayPath = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/display`;
+
+  async function openDisplay(event: FormEvent) {
+    event.preventDefault();
+    const popup = window.open("about:blank", "_blank");
+    if (!await selectGame(gameCode)) { popup?.close(); return; }
+    if (popup) { popup.opener = null; popup.location.replace(displayPath); }
+    else router.push("/display");
+  }
 
   async function join(event: FormEvent) {
     event.preventDefault();
@@ -53,7 +62,7 @@ export default function Home() {
         {error && <p className="form-error">{error}</p>}
         <Button type="submit" disabled={loading}>대기실 참가 <ArrowRight size={16}/></Button>
         <p className="form-note">관리자에게 받은 6자리 게임 코드와 팀명을 입력하세요.</p>
-      </form> : panel === "display" ? <form className="form-stack" onSubmit={async(e)=>{e.preventDefault();if(await selectGame(gameCode))router.push("/display")}}>
+      </form> : panel === "display" ? <form className="form-stack" onSubmit={openDisplay}>
         <label>게임 코드<input value={gameCode} onChange={(e)=>setGameCode(e.target.value.toUpperCase())} placeholder="예: A7K9Q2" autoFocus maxLength={6}/></label>
         {error&&<p className="form-error">{error}</p>}
         <Button type="submit" variant="gold" disabled={loading}>조회 화면 열기 <MonitorUp size={16}/></Button>

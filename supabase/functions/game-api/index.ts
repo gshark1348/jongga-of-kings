@@ -65,7 +65,7 @@ Deno.serve(async request=>{
       if(game.status!=="playing")return reply({error:"관리자가 게임을 시작한 뒤 포트폴리오를 구성할 수 있습니다."},409);
       const teamId=String(body.teamId??"");if(!await validTeam(teamId,String(body.teamToken??"")))return reply({error:"팀 인증이 만료되었습니다."},403);
       const positions=Array.isArray(body.positions)?body.positions:[];if(positions.length<1||positions.length>8)return reply({error:"1~8개 종목을 선택해야 합니다."},400);
-      const total=positions.reduce((sum:number,item:{weight?:number})=>sum+Number(item.weight??0),0);if(total!==100)return reply({error:"포트폴리오 비중 합계는 100%여야 합니다."},400);
+      const total=positions.reduce((sum:number,item:{weight?:number})=>sum+Number(item.weight??0),0);if(Math.abs(total-100)>.01)return reply({error:"포트폴리오 비중 합계는 100%여야 합니다."},400);
       const{data:team}=await db.from("teams").select("portfolio,previous_portfolio").eq("id",teamId).eq("game_id",game.id).single();const current=Array.isArray(team?.portfolio)?team.portfolio:[];const savedBaseline=Array.isArray(team?.previous_portfolio)?team.previous_portfolio:[];const previous=game.current_turn===1?[]:(savedBaseline.length?savedBaseline:current);
       const ids=new Set([...previous.map((item:{companyId:string})=>item.companyId),...positions.map((item:{companyId:string})=>item.companyId)]);let difference=0;ids.forEach(id=>{difference+=Math.abs(Number(previous.find((item:{companyId:string})=>item.companyId===id)?.weight??0)-Number(positions.find((item:{companyId:string})=>item.companyId===id)?.weight??0))});const turnover=difference/2;
       if(game.current_turn>1&&turnover<Number(game.minimum_turnover))return reply({error:`최소 변경률 ${game.minimum_turnover}%를 충족하지 못했습니다.`},400);
