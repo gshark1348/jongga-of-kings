@@ -6,15 +6,19 @@ import { useRouter } from "next/navigation";
 import { useGame } from "@/components/game-provider";
 import { Brand, Delta } from "@/components/ui";
 import { companies } from "@/lib/mock-data";
+import { lobbyWallpapers, shuffleLobbyWallpapers } from "@/lib/lobby-wallpapers";
 import { getMarketMood, getNewsIssue } from "@/lib/news-engine";
 
 const modes = ["종합 현황", "뉴스 집중", "랭킹 집중", "시장 현황"] as const;
+const lobbyRotationSize = 10;
 
 export default function Display() {
   const { teams, status, turn, totalTurns, gameCode, currentNews } = useGame();
   const router = useRouter();
   const [mode, setMode] = useState(0);
   const [auto, setAuto] = useState(false);
+  const [wallpapers, setWallpapers] = useState(lobbyWallpapers.slice(0, lobbyRotationSize));
+  const [wallpaperIndex, setWallpaperIndex] = useState(0);
 
   useEffect(() => {
     if (!auto) return;
@@ -22,6 +26,20 @@ export default function Display() {
     return () => window.clearInterval(id);
   }, [auto]);
   useEffect(() => { if (status === "finished") router.replace("/results"); }, [router, status]);
+  useEffect(() => {
+    if (status !== "lobby") return;
+    const shuffleId = window.setTimeout(() => {
+      setWallpapers(shuffleLobbyWallpapers(lobbyWallpapers).slice(0, lobbyRotationSize));
+      setWallpaperIndex(0);
+    }, 0);
+    const id = window.setInterval(() => {
+      setWallpaperIndex((current) => (current + 1) % lobbyRotationSize);
+    }, 3000);
+    return () => {
+      window.clearTimeout(shuffleId);
+      window.clearInterval(id);
+    };
+  }, [status]);
 
   const initialSetup = turn === 1;
   const issue = currentNews?.issue ?? getNewsIssue(gameCode, turn);
@@ -30,9 +48,24 @@ export default function Display() {
   const showRanking = mode === 0 || mode === 2;
   const showMarket = mode === 0 || mode === 3;
 
-  if (status === "lobby") return <main className="display-page">
+  if (status === "lobby") return <main className="display-page display-lobby">
+    <div className="lobby-wallpaper-stack" aria-hidden="true">
+      {wallpapers.map((wallpaper, index) => <div
+        className={`lobby-wallpaper ${index === wallpaperIndex ? "is-active" : ""}`}
+        key={wallpaper.id}
+        style={{ backgroundImage: `url(${wallpaper.imageUrl})` }}
+      />)}
+      <div className="lobby-wallpaper-shade" />
+    </div>
     <div className="display-header"><Brand/><span className="mono">PUBLIC DISPLAY · {gameCode || "NO GAME"}</span></div>
-    <section className="display-waiting"><div><p className="eyebrow">OPENING SOON</p><h1>팀 참가를<br/>기다리고 있습니다</h1><div className="display-game-code"><small>GAME CODE</small><strong>{gameCode}</strong></div><p>현재 {teams.length}개 팀이 개장을 준비하고 있습니다.</p></div></section>
+    <section className="display-waiting lobby-waiting"><div className="lobby-copy"><p className="eyebrow">OPENING SOON</p><h1>팀 참가를<br/>기다리고 있습니다</h1><div className="display-game-code"><small>GAME CODE</small><strong>{gameCode}</strong></div><p>현재 {teams.length}개 팀이 개장을 준비하고 있습니다.</p></div>
+      <aside className="lobby-company-caption">
+        <small>MARKET FIGURE · {(wallpaperIndex + 1).toString().padStart(2, "0")}</small>
+        <strong>{wallpapers[wallpaperIndex]?.groupName}</strong>
+        <div className="lobby-wordmarks">{wallpapers[wallpaperIndex]?.wordmarks.map((wordmark) => <span key={wordmark}>{wordmark}</span>)}</div>
+        <p>{wallpapers[wallpaperIndex]?.companies.join(" · ")}</p>
+      </aside>
+    </section>
     <div className="ticker"><div className="ticker-track"><span>종가의 제왕</span><span>게임 코드와 팀명을 입력하면 즉시 참가 목록에 추가됩니다</span><span>종가의 제왕</span><span>게임 코드와 팀명을 입력하면 즉시 참가 목록에 추가됩니다</span></div></div>
   </main>;
 
