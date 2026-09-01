@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, BarChart3, BookOpen, MonitorUp, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, BarChart3, BookOpen, ExternalLink, MonitorUp, ShieldCheck, Users } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useGame } from "@/components/game-provider";
 import { Brand, Button } from "@/components/ui";
@@ -30,7 +30,7 @@ export default function Home() {
   }
 
   return <main className="landing">
-    <header className="landing-top"><Brand/></header>
+    <header className="landing-top"><Brand/><a className="developer-link" href="https://kwonsdigitalworkspace.notion.site/Kwon-s-Digital-Workspace-398bb84674cf80eb8454db0139979c8e" target="_blank" rel="noopener noreferrer"><span><small>CREATOR / PROFILE</small>개발자 소개</span><ExternalLink size={15}/></a></header>
     <section className="hero-grid">
       <div className="hero-copy">
         <p className="eyebrow">가상 증권시장 전략 게임</p>
