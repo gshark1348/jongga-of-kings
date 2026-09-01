@@ -21,7 +21,7 @@ export default function Home() {
   }
 
   return <main className="landing">
-    <header className="landing-top"><Brand/><span className="edition mono">CLUB EDITION · 2026</span></header>
+    <header className="landing-top"><Brand/></header>
     <section className="hero-grid">
       <div className="hero-copy">
         <p className="eyebrow">가상 증권시장 전략 게임</p>

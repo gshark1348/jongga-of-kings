@@ -105,10 +105,6 @@ h2.news-title {
   letter-spacing: 0.17em;
   margin-top: 2px;
 }
-.edition {
-  font-size: 11px;
-  letter-spacing: 0.09em;
-}
 .hero-grid {
   display: grid;
   grid-template-columns: 1.08fr 0.92fr;
@@ -1179,9 +1175,6 @@ h2.news-title {
 @media (max-width: 620px) {
   .landing {
     padding: 20px;
-  }
-  .landing-top .edition {
-    display: none;
   }
   .entry-grid,
   .steps,
