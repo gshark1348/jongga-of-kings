@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Crown, RotateCcw, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
 import { useGame } from "@/components/game-provider";
 import { SiteHeader } from "@/components/site-header";
@@ -9,6 +10,12 @@ import { classifyInvestorProfile, investorProfiles } from "@/lib/investor-profil
 import { getNewsSequence } from "@/lib/news-engine";
 import { calculateInvestorMetrics } from "@/lib/investor-metrics";
 import type { FinalResult, InvestorMetrics, Team } from "@/lib/types";
+
+const characterBasePath = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/investor-characters`;
+
+function characterImage(profile: { id: string; number: number }) {
+  return `${characterBasePath}/${profile.number.toString().padStart(2, "0")}-${profile.id}.png`;
+}
 
 function localMetrics(team: Team): InvestorMetrics {
   return calculateInvestorMetrics(team.portfolio??[],team.previousPortfolio??[],team.turnoverRate,team.turnReturn,team.totalReturn);
@@ -50,12 +57,13 @@ export default function Results() {
     <div className="profile-intro"><div><p className="eyebrow">PORTFOLIO PERSONALITY TEST</p><h2>그래서, 우리는 어떤 투자자였을까?</h2><p>최종 포트폴리오 집중도, 변동성, 변경률과 뉴스 반응을 분석했습니다. 수익률과는 별개로 각 팀만의 투자 습관을 확인해보세요.</p></div><Sparkles size={42}/></div>
     <div className="team-profile-grid">{results.map((result,index)=>{const metrics=result.metrics;const profile=classifyInvestorProfile(metrics);return <article className={`team-profile ${index===0?"profile-featured":""}`} key={result.id}>
       <div className="profile-top"><span className="profile-no">TYPE {profile.number.toString().padStart(2,"0")}</span><span className="profile-stamp">{profile.stamp}</span></div>
+      <div className="profile-character"><Image src={characterImage(profile)} alt={`${profile.name} 투자자 캐릭터`} fill sizes="(max-width: 620px) 100vw, 50vw" unoptimized/></div>
       <p className="profile-team">{result.rank}위 · {result.teamName}</p><h3><small>“{profile.catchphrase}”</small>{profile.name}</h3><p className="profile-description">{profile.description}</p>
       <div className="profile-notes"><p><ShieldCheck size={15}/><span><b>이 팀의 무기</b>{profile.strength}</span></p><p><TriangleAlert size={15}/><span><b>다음 게임 주의보</b>{profile.caution}</span></p></div>
       <div className="profile-bars"><span>집중력 <i style={{width:`${metrics.concentration}%`}}/></span><span>모험심 <i style={{width:`${metrics.volatility}%`}}/></span><span>뉴스 반응 <i style={{width:`${metrics.newsReaction}%`}}/></span></div>
     </article>})}</div>
 
-    <details className="profile-index"><summary>16가지 투자자 유형 도감 보기 <span>+</span></summary><div className="profile-index-grid">{investorProfiles.map(item=><article key={item.id}><b>{item.number.toString().padStart(2,"0")}</b><div><small>“{item.catchphrase}”</small><strong>{item.name}</strong><p>{item.description}</p></div></article>)}</div></details>
+    <details className="profile-index"><summary>16가지 투자자 유형 도감 보기 <span>+</span></summary><div className="profile-index-grid">{investorProfiles.map(item=><article key={item.id}><div className="profile-index-character"><Image src={characterImage(item)} alt="" fill sizes="(max-width: 620px) 34vw, (max-width: 900px) 18vw, 11vw" unoptimized/><b>{item.number.toString().padStart(2,"0")}</b></div><div><small>“{item.catchphrase}”</small><strong>{item.name}</strong><p>{item.description}</p></div></article>)}</div></details>
 
     <div className="section-heading"><h2>이번 게임의 시장 연대기</h2><p>ISSUE CHAIN ARCHIVE</p></div><div>{issueHistory.map((item,index)=><article className="history-row" key={item.id}><b className="number">TURN {index+2}</b><div><h3>{item.headline}</h3><small>{item.impact}</small></div></article>)}</div>
   </Shell></>;
