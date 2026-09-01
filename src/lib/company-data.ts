@@ -1,15 +1,6 @@
 import type { Company, Market, MarketFactor, Sector } from "./types";
 
-const sectorImages: Record<Sector, [string, string]> = {
-  "AI·반도체": ["https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80", "Unsplash · Harrison Broad"],
-  "플랫폼·콘텐츠": ["https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1200&q=80", "Unsplash · Lorenzo Herrera"],
-  "자동차·배터리": ["https://images.unsplash.com/photo-1593941707882-a5bba14938c7?auto=format&fit=crop&w=1200&q=80", "Unsplash · Hyundai Motor Group"],
-  "바이오·헬스케어": ["https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1200&q=80", "Unsplash · Chokniti Khongchum"],
-  "금융": ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", "Unsplash · Alex Shutin"],
-  "에너지·전력": ["https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1200&q=80", "Unsplash · American Public Power Association"],
-  "조선·산업재": ["https://images.unsplash.com/photo-1494412574643-ff11b0a5c1c3?auto=format&fit=crop&w=1200&q=80", "Unsplash · Vidar Nordli-Mathisen"],
-  "소비·유통": ["https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80", "Unsplash · Clark Street Mercantile"],
-};
+const companyIllustrationBase = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/company-illustrations`;
 
 const officialSites: Record<string, string> = {
   "samsung-electronics":"https://www.samsung.com/sec/", "sk-hynix":"https://www.skhynix.com/", "hanmi-semiconductor":"https://www.hanmisemi.com/", "leeno":"https://www.leeno.com/", "hpsp":"https://www.hpsp.co.kr/",
@@ -87,7 +78,6 @@ const seeds: Seed[] = [
 export const realCompanies: Company[] = seeds.map((seed, index) => {
   const [id, code, name, legacyMarket, sector, description, cap, volatility, price, change] = seed;
   const market: Market = legacyMarket === "코스피아" ? "코스피" : "코스닥";
-  const [sectorImageUrl, sectorImageCredit] = sectorImages[sector];
   const officialWebsite = officialSites[id];
   const sensitivities = { ...sectorSensitivity[sector], ...companyOverrides[id] };
   const influenceAreas = Object.entries(sensitivities).sort((a,b)=>Math.abs(b[1]??0)-Math.abs(a[1]??0)).slice(0,5).map(([factor,value])=>`${factor} ${Number(value)>0?"수혜":"부담"}`);
@@ -96,8 +86,8 @@ export const realCompanies: Company[] = seeds.map((seed, index) => {
     id, code, name, market, sector, description, cap, volatility, price, change,
     traits: [cap + "주", volatility === "높음" ? "고변동성" : "시장 대표", sector + " 민감"],
     history: [base * .92, base * .96, base * .94, base * .98, base].map(Math.round),
-    imageUrl: sectorImageUrl,
-    imageCredit: `${sectorImageCredit} · ${sector} 관련 이미지`,
+    imageUrl: `${companyIllustrationBase}/${id}.png`,
+    imageCredit: `종가의 제왕 · ${name} 폴리곤 일러스트`,
     founded: `${1965 + (index * 3) % 48}년`, employees: `${(1200 + index * 731).toLocaleString()}명`,
     gameRevenue: 3800 + index * 1470, gameOperatingMargin: Number((5.4 + (index % 9) * 1.7).toFixed(1)),
     officialWebsite, influenceAreas, sensitivities,
