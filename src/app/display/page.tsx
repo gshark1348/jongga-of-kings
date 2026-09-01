@@ -10,15 +10,13 @@ import { lobbyWallpapers, shuffleLobbyWallpapers } from "@/lib/lobby-wallpapers"
 import { getMarketMood, getNewsIssue } from "@/lib/news-engine";
 
 const modes = ["종합 현황", "뉴스 집중", "랭킹 집중", "시장 현황"] as const;
-const lobbyRotationSize = 10;
 
 export default function Display() {
   const { teams, status, turn, totalTurns, gameCode, currentNews } = useGame();
   const router = useRouter();
   const [mode, setMode] = useState(0);
   const [auto, setAuto] = useState(false);
-  const [wallpapers, setWallpapers] = useState(lobbyWallpapers.slice(0, lobbyRotationSize));
-  const [wallpaperIndex, setWallpaperIndex] = useState(0);
+  const [{ wallpapers, wallpaperIndex }, setLobbyRotation] = useState({ wallpapers: lobbyWallpapers, wallpaperIndex: 0 });
 
   useEffect(() => {
     if (!auto) return;
@@ -29,11 +27,19 @@ export default function Display() {
   useEffect(() => {
     if (status !== "lobby") return;
     const shuffleId = window.setTimeout(() => {
-      setWallpapers(shuffleLobbyWallpapers(lobbyWallpapers).slice(0, lobbyRotationSize));
-      setWallpaperIndex(0);
+      setLobbyRotation({ wallpapers: shuffleLobbyWallpapers(lobbyWallpapers), wallpaperIndex: 0 });
     }, 0);
     const id = window.setInterval(() => {
-      setWallpaperIndex((current) => (current + 1) % lobbyRotationSize);
+      setLobbyRotation((current) => {
+        if (current.wallpaperIndex + 1 < current.wallpapers.length) {
+          return { ...current, wallpaperIndex: current.wallpaperIndex + 1 };
+        }
+        const nextWallpapers = shuffleLobbyWallpapers(lobbyWallpapers);
+        if (nextWallpapers[0]?.id === current.wallpapers.at(-1)?.id && nextWallpapers.length > 1) {
+          [nextWallpapers[0], nextWallpapers[1]] = [nextWallpapers[1], nextWallpapers[0]];
+        }
+        return { wallpapers: nextWallpapers, wallpaperIndex: 0 };
+      });
     }, 3000);
     return () => {
       window.clearTimeout(shuffleId);
@@ -47,20 +53,22 @@ export default function Display() {
   const showNews = mode === 0 || mode === 1;
   const showRanking = mode === 0 || mode === 2;
   const showMarket = mode === 0 || mode === 3;
+  const previousWallpaperIndex = (wallpaperIndex - 1 + wallpapers.length) % wallpapers.length;
+  const nextWallpaperIndex = (wallpaperIndex + 1) % wallpapers.length;
 
   if (status === "lobby") return <main className="display-page display-lobby">
     <div className="lobby-wallpaper-stack" aria-hidden="true">
       {wallpapers.map((wallpaper, index) => <div
         className={`lobby-wallpaper ${index === wallpaperIndex ? "is-active" : ""}`}
         key={wallpaper.id}
-        style={{ backgroundImage: `url(${wallpaper.imageUrl})` }}
+        style={index === wallpaperIndex || index === previousWallpaperIndex || index === nextWallpaperIndex ? { backgroundImage: `url(${wallpaper.imageUrl})` } : undefined}
       />)}
       <div className="lobby-wallpaper-shade" />
     </div>
     <div className="display-header"><Brand/><span className="mono">PUBLIC DISPLAY · {gameCode || "NO GAME"}</span></div>
     <section className="display-waiting lobby-waiting"><div className="lobby-copy"><p className="eyebrow">OPENING SOON</p><h1>팀 참가를<br/>기다리고 있습니다</h1><div className="display-game-code"><small>GAME CODE</small><strong>{gameCode}</strong></div><p>현재 {teams.length}개 팀이 개장을 준비하고 있습니다.</p></div>
       <aside className="lobby-company-caption">
-        <small>MARKET FIGURE · {(wallpaperIndex + 1).toString().padStart(2, "0")}</small>
+        <small>MARKET FIGURE · {(wallpaperIndex + 1).toString().padStart(2, "0")} / {wallpapers.length.toString().padStart(2, "0")}</small>
         <strong>{wallpapers[wallpaperIndex]?.groupName}</strong>
         <div className="lobby-wordmarks">{wallpapers[wallpaperIndex]?.wordmarks.map((wordmark) => <span key={wordmark}>{wordmark}</span>)}</div>
         <p>{wallpapers[wallpaperIndex]?.companies.join(" · ")}</p>
