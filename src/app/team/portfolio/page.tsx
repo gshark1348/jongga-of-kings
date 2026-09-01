@@ -14,6 +14,7 @@ import { CompanyDetailPopup } from "@/components/company-detail-popup";
 import { NewsPaperPopup } from "@/components/news-paper-popup";
 import { BANK_NAME, calculateCompanyReturn, getBorrowingLimit, getNetAssets, MAX_LOAN_AMOUNT } from "@/lib/market-engine";
 import { getCompanyEvents } from "@/lib/company-events";
+import type { MarketEvent } from "@/lib/event-catalog";
 
 export default function Portfolio() {
   const { initialBudget, minimumTurnover, turn, currentPortfolio, currentBaselinePortfolio, currentTeam, currentNews, newsHistory, error, reopenPortfolio, submitPortfolio, status, gameCode, baseRate, loanRate, activeRateHeadline, borrow, repay } = useGame();
@@ -31,7 +32,7 @@ export default function Portfolio() {
   function toggleSector(sector:Sector){setOpenSectors(current=>{const next=new Set(current);if(next.has(sector))next.delete(sector);else next.add(sector);return next})}
   function changeWeight(id:string,value:number){const position=positions.find(item=>item.companyId===id);if(!position||!Number.isFinite(value))return;const nextWeight=Number(Math.max(0,Math.min(position.weight+remaining,value)).toFixed(2));if(nextWeight===position.weight)return;setPositions(positions.map(item=>item.companyId===id?{...item,weight:nextWeight}:item));markEdited()}
   async function submit(){const largest=[...positions].sort((a,b)=>b.weight-a.weight)[0];const focus=companies.find(company=>company.id===largest.companyId)?.sector??"AI·반도체";if(await submitPortfolio(positions,focus)){setEditing(false);setSubmitted(true)}}
-  const companyEvents=useMemo(()=>currentNews?.companyEvents??(initialSetup?[]:getCompanyEvents(turn)),[currentNews?.companyEvents,initialSetup,turn]);
+  const companyEvents=currentNews?.companyEvents??(initialSetup?[]:getCompanyEvents(turn,2,[],issue as MarketEvent|null));
   const investmentValue=currentTeam?.assets??initialBudget; const debt=(currentTeam?.loanBalance??0)+(currentTeam?.accruedInterest??0); const netAssets=currentTeam?getNetAssets(currentTeam):initialBudget; const loanLimit=getBorrowingLimit(initialBudget,currentTeam?.loanBalance??0);
   async function handleBorrow(){if(!currentTeam)return;const before=investmentValue;if(!await borrow(currentTeam.id,loanAmount))return;const after=before+loanAmount;setPositions(items=>items.map(item=>({...item,weight:Number((item.weight*before/after).toFixed(2))})));markEdited()}
   function displayChange(company:Company){return issue?calculateCompanyReturn(company,issue,turn,0,companyEvents,previousIssues).total:0}

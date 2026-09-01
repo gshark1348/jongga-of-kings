@@ -1,5 +1,6 @@
 import { realCompanies as companies } from "./company-data";
 import type { Company, CompanyEvent, Sector } from "./types";
+import type { MarketEvent } from "./event-catalog";
 
 const templates: Record<Sector, { positive: ((company: Company) => string)[]; negative: ((company: Company) => string)[] }> = {
   "AI·반도체": { positive:[c=>`${c.name}, 차세대 AI 반도체 공급계약 확대…생산라인 조기 가동`,c=>`${c.name}, 고부가 제품 수율 개선…하반기 출하 전망 상향`], negative:[c=>`${c.name}, 핵심 장비 반입 지연…신규 생산 일정 재검토`,c=>`${c.name}, 주요 고객사 재고조정 통보…단기 출하량 감소 전망`]},
@@ -114,7 +115,25 @@ export const companyEventCatalog: CompanyEvent[] = companies.flatMap((company) =
   return {id:`${company.id}-${sentiment}-${index}`,companyId:company.id,companyName:company.name,sector:company.sector,headline:makeHeadline(company),sentiment,directImpact:sentiment==="positive"?magnitude:-magnitude};
 })));
 
-export function getCompanyEvents(turn: number, count = 2, history: CompanyEvent[] | string[] = []): CompanyEvent[] {
+type NewsContext = Pick<MarketEvent,"sector"|"phase"|"factors">;
+
+function sectorNewsTone(issue: NewsContext | null | undefined, sector: Sector): CompanyEvent["sentiment"] | null {
+  if (!issue) return null;
+  if (issue.sector===sector) {
+    if (["확산","과열","회복"].includes(issue.phase)) return "positive";
+    if (["병목","충격","조정"].includes(issue.phase)) return "negative";
+  }
+  const sectorCompanies=companies.filter((company)=>company.sector===sector);
+  const score=sectorCompanies.reduce((sectorSum,company)=>sectorSum+Object.entries(issue.factors).reduce((sum,[factor,value])=>sum+Number(company.sensitivities[factor as keyof typeof company.sensitivities]??0)*Number(value??0),0),0)/Math.max(1,sectorCompanies.length);
+  return score>.45?"positive":score<-.45?"negative":null;
+}
+
+export function isCompanyEventCompatible(event: CompanyEvent, issue?: NewsContext | null) {
+  const tone=sectorNewsTone(issue,event.sector);
+  return !tone||event.sentiment===tone;
+}
+
+export function getCompanyEvents(turn: number, count = 2, history: CompanyEvent[] | string[] = [], issue?: NewsContext | null): CompanyEvent[] {
   const pastEvents = history.filter((item): item is CompanyEvent => typeof item !== "string");
   const usedIds = history.map((item)=>typeof item === "string" ? item : item.id);
   const picked: CompanyEvent[] = [];
@@ -124,14 +143,18 @@ export function getCompanyEvents(turn: number, count = 2, history: CompanyEvent[
     .filter((event)=>event.chainId&&event.chainStage&&event.chainLength&&event.chainStage<event.chainLength)
     .map((event)=>companyEventChains.find((candidate)=>candidate.chainId===event.chainId&&candidate.chainStage===event.chainStage!+1))
     .filter((event):event is CompanyEvent=>Boolean(event))
+    .filter((event)=>isCompanyEventCompatible(event,issue))
     .sort((a,b)=>seededIndex(`${turn}-${a.companyId}`,997)-seededIndex(`${turn}-${b.companyId}`,997));
   for (const event of continuations.slice(0,count)) picked.push(event);
   for (let slot=0; slot<count; slot+=1) {
     if (picked.length>=count) break;
-    const starters=companyEventChains.filter((event)=>event.chainStage===1&&!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId));
-    const available=starters.length?starters:companyEventCatalog.filter((event)=>!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId));
-    const fallback=companyEventCatalog.filter((event)=>!picked.some((item)=>item.companyId===event.companyId));
-    const candidates=available.length?available:fallback;
+    const starters=companyEventChains.filter((event)=>event.chainStage===1&&!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId)&&isCompanyEventCompatible(event,issue));
+    const standalone=companyEventCatalog.filter((event)=>!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId)&&isCompanyEventCompatible(event,issue));
+    const available=[...starters,...standalone];
+    const fallback=companyEventCatalog.filter((event)=>!picked.some((item)=>item.companyId===event.companyId)&&isCompanyEventCompatible(event,issue));
+    const issueSectorCandidates=issue?.sector!=="거시"?available.filter((event)=>event.sector===issue?.sector):[];
+    const candidates=issueSectorCandidates.length?issueSectorCandidates:available.length?available:fallback;
+    if (!candidates.length) break;
     picked.push(candidates[seededIndex(`company-event-${turn}-${slot}-${usedIds.join("|")}`,candidates.length)]);
   }
   return picked;
