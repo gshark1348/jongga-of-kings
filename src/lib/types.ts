@@ -78,6 +78,10 @@ export interface CompanyEvent {
   headline: string;
   sentiment: "positive" | "negative";
   directImpact: number;
+  chainId?: string;
+  chainLabel?: string;
+  chainStage?: number;
+  chainLength?: number;
 }
 
 export interface SurpriseEvent {

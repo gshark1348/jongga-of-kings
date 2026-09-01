@@ -29,18 +29,106 @@ const shared = {
   ],
 };
 
+type ChainStep = {
+  headline: (company: Company) => string;
+  sentiment: "positive" | "negative";
+  impactMultiplier: number;
+};
+
+const chainTemplates: Record<Sector, { label: string; steps: ChainStep[] }> = {
+  "AI·반도체": { label:"신규 생산라인 가동", steps:[
+    {headline:c=>`${c.name}, AI 반도체 신규 생산라인 증설 발표…내년 양산 목표`,sentiment:"positive",impactMultiplier:.72},
+    {headline:c=>`${c.name}, 핵심 장비 반입 지연…신규 라인 시험가동 일정 늦춰`,sentiment:"negative",impactMultiplier:.82},
+    {headline:c=>`${c.name}, 지연된 장비 설치 완료…신규 라인 시험생산 돌입`,sentiment:"positive",impactMultiplier:.68},
+    {headline:c=>`${c.name}, 신규 공정 수율 안정권 진입…고객사 품질 인증 착수`,sentiment:"positive",impactMultiplier:.88},
+    {headline:c=>`${c.name}, 글로벌 고객사 품질 인증 통과…대규모 공급계약 체결`,sentiment:"positive",impactMultiplier:1.28},
+  ]},
+  "플랫폼·콘텐츠": { label:"글로벌 서비스 출시", steps:[
+    {headline:c=>`${c.name}, 차세대 플랫폼 글로벌 출시 계획 공개…사전예약 개시`,sentiment:"positive",impactMultiplier:.7},
+    {headline:c=>`${c.name}, 현지 심의·번역 일정 지연…글로벌 출시 지역 일부 축소`,sentiment:"negative",impactMultiplier:.78},
+    {headline:c=>`${c.name}, 현지 파트너십 보강…주요 지역 서비스 순차 개시`,sentiment:"positive",impactMultiplier:.68},
+    {headline:c=>`${c.name}, 초기 이용자 유지율 예상 상회…서버 증설 결정`,sentiment:"positive",impactMultiplier:.9},
+    {headline:c=>`${c.name}, 글로벌 유료 이용자 목표 조기 달성…추가 지역 진출 확정`,sentiment:"positive",impactMultiplier:1.22},
+  ]},
+  "자동차·배터리": { label:"차세대 제품 양산", steps:[
+    {headline:c=>`${c.name}, 차세대 전동화 제품 공개…신규 전용라인 투자 확정`,sentiment:"positive",impactMultiplier:.7},
+    {headline:c=>`${c.name}, 핵심 소재 조달 차질…시제품 생산 일정 재조정`,sentiment:"negative",impactMultiplier:.82},
+    {headline:c=>`${c.name}, 대체 공급망 확보…차세대 제품 시범생산 재개`,sentiment:"positive",impactMultiplier:.7},
+    {headline:c=>`${c.name}, 안전성 시험 통과…완성차 고객사 양산 승인 절차 돌입`,sentiment:"positive",impactMultiplier:.88},
+    {headline:c=>`${c.name}, 북미 고객사 양산 승인 획득…장기 공급물량 확정`,sentiment:"positive",impactMultiplier:1.26},
+  ]},
+  "바이오·헬스케어": { label:"신약 임상·허가", steps:[
+    {headline:c=>`${c.name}, 핵심 신약 후보물질 후기 임상 진입…첫 환자 투약`,sentiment:"positive",impactMultiplier:.78},
+    {headline:c=>`${c.name}, 임상 환자 모집 속도 둔화…중간결과 발표 연기`,sentiment:"negative",impactMultiplier:.86},
+    {headline:c=>`${c.name}, 임상 모집 목표 달성…안전성 검토위원회 통과`,sentiment:"positive",impactMultiplier:.78},
+    {headline:c=>`${c.name}, 주요 평가지표 개선 확인…해외 허가 사전상담 개시`,sentiment:"positive",impactMultiplier:1.0},
+    {headline:c=>`${c.name}, 신약 허가신청 접수…글로벌 제약사와 판권 계약`,sentiment:"positive",impactMultiplier:1.32},
+  ]},
+  "금융": { label:"디지털 금융 신사업", steps:[
+    {headline:c=>`${c.name}, 기업금융 디지털 플랫폼 출범…중소기업 고객 확대 추진`,sentiment:"positive",impactMultiplier:.62},
+    {headline:c=>`${c.name}, 당국 내부통제 보완 요구…신규 서비스 확대 잠정 중단`,sentiment:"negative",impactMultiplier:.72},
+    {headline:c=>`${c.name}, 내부통제 개선안 제출…제한적 서비스 재개`,sentiment:"positive",impactMultiplier:.58},
+    {headline:c=>`${c.name}, 디지털 플랫폼 연체율 안정…취급액 목표 상향`,sentiment:"positive",impactMultiplier:.76},
+    {headline:c=>`${c.name}, 플랫폼 흑자전환 달성…주주환원 재원 확대 검토`,sentiment:"positive",impactMultiplier:1.08},
+  ]},
+  "에너지·전력": { label:"대형 발전 프로젝트", steps:[
+    {headline:c=>`${c.name}, 대형 친환경 발전사업 우선협상대상자 선정`,sentiment:"positive",impactMultiplier:.72},
+    {headline:c=>`${c.name}, 주민 협의·환경 인허가 지연…착공 시점 불확실`,sentiment:"negative",impactMultiplier:.8},
+    {headline:c=>`${c.name}, 환경 보완안 조건부 승인…사업 일정 정상화`,sentiment:"positive",impactMultiplier:.68},
+    {headline:c=>`${c.name}, 프로젝트 금융조달 완료…핵심 기자재 발주 착수`,sentiment:"positive",impactMultiplier:.88},
+    {headline:c=>`${c.name}, 발전사업 본계약 체결…장기 전력판매계약 확보`,sentiment:"positive",impactMultiplier:1.24},
+  ]},
+  "조선·산업재": { label:"고부가 선박 수주", steps:[
+    {headline:c=>`${c.name}, 글로벌 선주와 친환경 선박 건조의향서 체결`,sentiment:"positive",impactMultiplier:.68},
+    {headline:c=>`${c.name}, 후판 가격 협상 난항…선박 계약조건 재논의`,sentiment:"negative",impactMultiplier:.78},
+    {headline:c=>`${c.name}, 원가연동 조건 합의…기본설계 승인 획득`,sentiment:"positive",impactMultiplier:.66},
+    {headline:c=>`${c.name}, 시운전 성능 목표 충족…옵션 물량 협상 착수`,sentiment:"positive",impactMultiplier:.86},
+    {headline:c=>`${c.name}, 친환경 선박 본계약·추가 옵션 확정…수주잔고 확대`,sentiment:"positive",impactMultiplier:1.22},
+  ]},
+  "소비·유통": { label:"신제품·해외 확장", steps:[
+    {headline:c=>`${c.name}, 프리미엄 신제품 공개…아시아 주요국 동시 출시 예고`,sentiment:"positive",impactMultiplier:.64},
+    {headline:c=>`${c.name}, 초도 물량 포장 결함 발견…일부 제품 출하 보류`,sentiment:"negative",impactMultiplier:.76},
+    {headline:c=>`${c.name}, 품질 개선·재출하 완료…유통망 판촉 재개`,sentiment:"positive",impactMultiplier:.62},
+    {headline:c=>`${c.name}, 재출시 제품 판매 회복…현지 재주문 물량 증가`,sentiment:"positive",impactMultiplier:.8},
+    {headline:c=>`${c.name}, 해외 판매 목표 조기 달성…현지 생산·유통 계약 체결`,sentiment:"positive",impactMultiplier:1.14},
+  ]},
+};
+
+export const companyEventChains: CompanyEvent[] = companies.flatMap((company) => {
+  const chain = chainTemplates[company.sector];
+  const magnitude=company.volatility==="높음"?4.8:company.volatility==="보통"?3.6:2.6;
+  return chain.steps.map((step,index)=>({
+    id:`${company.id}-chain-${index+1}`,companyId:company.id,companyName:company.name,sector:company.sector,
+    headline:step.headline(company),sentiment:step.sentiment,
+    directImpact:Number(((step.sentiment==="positive"?1:-1)*magnitude*step.impactMultiplier).toFixed(2)),
+    chainId:`${company.id}-main`,chainLabel:chain.label,chainStage:index+1,chainLength:chain.steps.length,
+  }));
+});
+
 export const companyEventCatalog: CompanyEvent[] = companies.flatMap((company) => (["positive","negative"] as const).flatMap((sentiment) => [...templates[company.sector][sentiment],...shared[sentiment]].map((makeHeadline,index) => {
   const magnitude=company.volatility==="높음"?4.8:company.volatility==="보통"?3.6:2.6;
   return {id:`${company.id}-${sentiment}-${index}`,companyId:company.id,companyName:company.name,sector:company.sector,headline:makeHeadline(company),sentiment,directImpact:sentiment==="positive"?magnitude:-magnitude};
 })));
 
-export function getCompanyEvents(turn: number, count = 2, usedIds: string[] = []): CompanyEvent[] {
+export function getCompanyEvents(turn: number, count = 2, history: CompanyEvent[] | string[] = []): CompanyEvent[] {
+  const pastEvents = history.filter((item): item is CompanyEvent => typeof item !== "string");
+  const usedIds = history.map((item)=>typeof item === "string" ? item : item.id);
   const picked: CompanyEvent[] = [];
+  const latestByCompany = new Map<string,CompanyEvent>();
+  for (const event of pastEvents) latestByCompany.set(event.companyId,event);
+  const continuations = [...latestByCompany.values()]
+    .filter((event)=>event.chainId&&event.chainStage&&event.chainLength&&event.chainStage<event.chainLength)
+    .map((event)=>companyEventChains.find((candidate)=>candidate.chainId===event.chainId&&candidate.chainStage===event.chainStage!+1))
+    .filter((event):event is CompanyEvent=>Boolean(event))
+    .sort((a,b)=>seededIndex(`${turn}-${a.companyId}`,997)-seededIndex(`${turn}-${b.companyId}`,997));
+  for (const event of continuations.slice(0,count)) picked.push(event);
   for (let slot=0; slot<count; slot+=1) {
-    const available=companyEventCatalog.filter((event)=>!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId));
+    if (picked.length>=count) break;
+    const starters=companyEventChains.filter((event)=>event.chainStage===1&&!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId));
+    const available=starters.length?starters:companyEventCatalog.filter((event)=>!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId));
     const fallback=companyEventCatalog.filter((event)=>!picked.some((item)=>item.companyId===event.companyId));
     const candidates=available.length?available:fallback;
-    picked.push(candidates[seededIndex(`company-event-${turn}-${slot}`,candidates.length)]);
+    picked.push(candidates[seededIndex(`company-event-${turn}-${slot}-${usedIds.join("|")}`,candidates.length)]);
   }
   return picked;
 }

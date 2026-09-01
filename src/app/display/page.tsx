@@ -140,7 +140,7 @@ export default function Display() {
                       {brief}
                     </p>
                   ))}
-                  {currentNews?.companyEvents.map((event) => <p key={event.id}><b>{event.companyName}</b><br/>{event.headline}</p>)}
+                  {currentNews?.companyEvents.map((event) => <p key={event.id}><b>{event.companyName}{event.chainStage&&event.chainLength?` · 연속보도 ${event.chainStage}/${event.chainLength}`:""}</b><br/>{event.headline}</p>)}
                 </div>
                 {currentNews?.surpriseEvent&&<div className="notice"><strong>돌발 속보</strong> {currentNews.surpriseEvent.headline}</div>}
               </div>

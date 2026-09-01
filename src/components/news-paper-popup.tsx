@@ -19,7 +19,7 @@ export function NewsPaperPopup({ issue, turn, companyEvents = [], surpriseEvent 
       <figure className="news-hero"><div style={{backgroundImage:`linear-gradient(180deg,transparent 45%,rgba(20,19,17,.65)),url(${issue.imageUrl})`}}/><figcaption>{issue.imageCredit}</figcaption></figure>
       <div className="news-popup-briefs">{issue.briefs.map((brief,index)=><article key={`${issue.id}-${index}`}><small>{index===0?"파급 신호":"교차 산업 단신"} {String(index+1).padStart(2,"0")}</small><strong>{brief}</strong></article>)}</div>
       {surpriseEvent&&<div className="notice"><strong>돌발 속보 · {surpriseEvent.category}</strong> {surpriseEvent.headline}</div>}
-      {companyEvents.length>0&&<div className="news-popup-briefs">{companyEvents.map((event,index)=><article key={event.id}><small>기업 단신 {String(index+1).padStart(2,"0")} · {event.companyName}</small><strong>{event.headline}</strong></article>)}</div>}
+      {companyEvents.length>0&&<div className="news-popup-briefs">{companyEvents.map((event,index)=><article key={event.id}><small>기업 단신 {String(index+1).padStart(2,"0")} · {event.companyName}{event.chainStage&&event.chainLength?` · 연속보도 ${event.chainStage}/${event.chainLength}`:""}</small><strong>{event.headline}</strong>{event.chainLabel&&<span>{event.chainLabel}</span>}</article>)}</div>}
       <footer><span>기사 본문은 제공되지 않습니다. 헤드라인의 연결고리를 추론하세요.</span><Button onClick={() => setOpen(false)}>시장 확인하기</Button></footer>
     </section></div>}
   </>;
