@@ -2361,7 +2361,7 @@ h2.news-title {
 }
 .bank-desk {
   display: grid;
-  grid-template-columns: 1fr 1.35fr 150px auto;
+  grid-template-columns: .7fr 1fr .85fr 1.15fr 1.45fr;
   align-items: center;
   gap: 18px;
   padding: 11px 16px;
@@ -2412,20 +2412,97 @@ h2.news-title {
   background: var(--white);
   font-size: 10px;
 }
-.bank-actions {
+.bank-borrow {
   display: flex;
+  align-items: end;
   gap: 6px;
 }
-.bank-actions .button {
+.bank-borrow label {
+  flex: 1;
+}
+.bank-borrow .button,
+.repay-action .button {
   min-height: 34px;
   padding: 6px 10px;
   font-size: 10px;
+}
+.loan-ledger {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 10px;
+  padding-inline: 14px;
+  border-inline: 1px solid var(--line-soft);
+}
+.loan-ledger span {
+  font-size: 8px;
+  color: var(--muted);
+}
+.loan-ledger b,
+.loan-ledger strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink);
+  font: 700 11px var(--font-geist-mono);
+}
+.loan-ledger span:last-child {
+  grid-column: 1 / -1;
+  padding-top: 4px;
+  border-top: 1px solid var(--line-soft);
+}
+.loan-ledger strong {
+  color: var(--burgundy);
+  font-size: 13px;
+}
+.repay-desk {
+  display: grid;
+  gap: 5px;
+}
+.repay-desk > small {
+  font-size: 8px;
+  color: var(--muted);
+}
+.repay-percent {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.repay-percent button {
+  padding: 5px 4px;
+  border: 1px solid var(--line-soft);
+  border-right: 0;
+  background: var(--white);
+  font: 700 9px var(--font-geist-mono);
+}
+.repay-percent button:last-child {
+  border-right: 1px solid var(--line-soft);
+}
+.repay-percent button[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--paper);
+}
+.repay-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.repay-action span {
+  font-size: 8px;
+  color: var(--muted);
+}
+.repay-action b {
+  display: block;
+  color: var(--ink);
+  font: 700 10px var(--font-geist-mono);
 }
 .bank-desk > p {
   grid-column: 1/-1;
   margin: 0;
   font-size: 8px;
   color: var(--muted);
+}
+.bank-desk > p.bank-notice {
+  color: var(--green);
+  font-weight: 700;
 }
 .rate-banner {
   display: grid;

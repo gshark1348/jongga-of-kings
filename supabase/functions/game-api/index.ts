@@ -86,7 +86,7 @@ Deno.serve(async request=>{
       if(game.status!=="playing")return reply({error:"관리자가 게임을 시작한 뒤 대출을 이용할 수 있습니다."},409);
       if(game.current_turn===1)return reply({error:"첫 포트폴리오 편성 중에는 대출을 이용할 수 없습니다."},409);
       const teamId=String(body.teamId??"");if(!await validTeam(teamId,String(body.teamToken??"")))return reply({error:"팀 인증이 만료되었습니다."},403);
-      const{data:team}=await db.from("teams").select("*").eq("id",teamId).single();const amount=Math.max(0,Math.round(Number(body.amount??0)));const mode=body.mode==="repay"?"repay":"borrow";
+      const{data:team}=await db.from("teams").select("*").eq("id",teamId).eq("game_id",game.id).single();if(!team)return reply({error:"팀 대출 정보를 찾을 수 없습니다."},404);const amount=Math.max(0,Math.round(Number(body.amount??0)));const mode=body.mode==="repay"?"repay":"borrow";
       if(mode==="borrow"){const limit=Math.min(game.initial_budget*.5,MAX_LOAN_AMOUNT)-team.loan_balance;if(amount<=0||amount>limit)return reply({error:"게임 최대 대출 한도를 초과했습니다."},400);team.assets+=amount;team.loan_balance+=amount;}
       else{const due=team.loan_balance+team.accrued_interest;if(amount<=0||amount>due||amount>team.assets)return reply({error:"상환 금액을 확인해주세요."},400);const interest=Math.min(amount,team.accrued_interest);team.assets-=amount;team.accrued_interest-=interest;team.loan_balance=Math.max(0,team.loan_balance-(amount-interest));}
       await db.from("teams").update({assets:team.assets,loan_balance:team.loan_balance,accrued_interest:team.accrued_interest}).eq("id",teamId);await db.from("team_standings").update({net_assets:team.assets-team.loan_balance-team.accrued_interest,updated_at:new Date().toISOString()}).eq("team_id",teamId);return reply({team});
