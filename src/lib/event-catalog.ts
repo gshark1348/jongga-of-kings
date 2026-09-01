@@ -24,16 +24,26 @@ const media: Record<Sector | "거시", [string, string]> = {
 
 const illustrationBase = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/news-illustrations`;
 const eventIllustrations: Partial<Record<string,string>> = {
+  "AI-01":"ai-01-enterprise-assistant.png",
   "AI-04":"ai-04-hbm-shortage.png",
+  "PL-02":"pl-02-content-export.png",
   "PL-04":"pl-04-platform-fee-disclosure.png",
+  "AU-03":"au-03-mineral-price-shock.png",
   "AU-05":"au-05-battery-safety.png",
+  "BIO-01":"bio-01-clinical-positive.png",
   "BIO-04":"bio-04-clinical-failure.png",
   "FN-04":"fn-04-margin-call.png",
+  "FN-05":"fn-05-loan-delinquency.png",
+  "EN-02":"en-02-data-center-power.png",
   "EN-03":"en-03-power-reserve.png",
+  "IND-01":"ind-01-ship-orders.png",
   "IND-03":"ind-03-shipyard-cost.png",
+  "CON-02":"con-02-tourism-boom.png",
   "CON-04":"con-04-food-inflation.png",
   "MAC-01":"mac-01-rate-cut.png",
   "MAC-07":"mac-07-port-gridlock.png",
+  "MAC-08":"mac-08-cyberattack.png",
+  "MAC-09":"mac-09-stimulus.png",
 };
 
 function eventMedia(id:string, fallback:[string,string]):[string,string] {
