@@ -2915,6 +2915,176 @@ h2.news-title {
   font-size: 13px;
   line-height: 1.7;
 }
+.market-causality {
+  margin-top: 55px;
+  padding-block: 26px 18px;
+  border-block: 4px double var(--line);
+}
+.market-causality-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 4px 20px;
+}
+.market-causality-head h2 {
+  margin: 5px 0 8px;
+  font: 800 clamp(28px, 3.3vw, 43px) var(--font-noto-serif-kr);
+  letter-spacing: -.045em;
+}
+.market-causality-head p:not(.eyebrow) {
+  max-width: 700px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.65;
+}
+.causality-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 20px;
+  padding: 10px 13px;
+  border-block: 1px solid var(--line);
+  background: var(--paper-2);
+  font: 8px var(--font-geist-mono);
+}
+.causality-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.causality-legend i {
+  width: 8px;
+  height: 8px;
+}
+.causality-legend i.positive { background: var(--burgundy); }
+.causality-legend i.negative { background: var(--fall); }
+.causality-scroll {
+  overflow-x: auto;
+  padding: 23px 3px 17px;
+  scrollbar-color: var(--ink) var(--paper-2);
+}
+.causality-track {
+  display: flex;
+  align-items: stretch;
+  width: max-content;
+  min-width: 100%;
+}
+.causality-unit {
+  display: flex;
+  align-items: stretch;
+}
+.causality-node {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  min-height: 390px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--burgundy);
+  background: var(--paper);
+  box-shadow: 5px 5px 0 var(--paper-2);
+}
+.causality-node-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line-soft);
+  font: 8px var(--font-geist-mono);
+}
+.causality-node-meta b { color: var(--burgundy); }
+.causality-node-meta span { color: var(--muted); }
+.causality-node h3 {
+  margin: 14px 0;
+  font: 800 18px/1.35 var(--font-noto-serif-kr);
+  letter-spacing: -.025em;
+}
+.causality-surprise {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 9px;
+  border: 1px solid var(--burgundy);
+  background: color-mix(in srgb, var(--burgundy) 8%, var(--paper));
+  color: var(--burgundy);
+  font-size: 9px;
+  line-height: 1.4;
+}
+.causality-surprise b { display: block; font-size: 7px; }
+.causality-factors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.causality-factors span {
+  padding: 4px 6px;
+  border: 1px solid currentColor;
+  font: 7px var(--font-geist-mono);
+}
+.causality-factors .positive { color: var(--burgundy); }
+.causality-factors .negative { color: var(--fall); }
+.causality-impact {
+  margin: 13px 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.55;
+}
+.causality-impact b,
+.causality-company small {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink);
+  font: 7px var(--font-geist-mono);
+  letter-spacing: .06em;
+}
+.causality-company {
+  margin-top: auto;
+  padding-top: 11px;
+  border-top: 1px solid var(--line-soft);
+}
+.causality-company p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.45;
+}
+.causality-company p b {
+  margin-right: 5px;
+  color: var(--ink);
+}
+.causality-link {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  width: 120px;
+  padding: 12px;
+  text-align: center;
+}
+.causality-link span {
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  background: var(--mustard);
+  font: 700 8px var(--font-geist-mono);
+}
+.causality-link svg {
+  width: 100%;
+  margin-block: 8px 5px;
+}
+.causality-link small {
+  color: var(--muted);
+  font-size: 7px;
+  line-height: 1.45;
+}
+.causality-note {
+  margin: 0;
+  padding-top: 13px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.55;
+}
 @media (max-width: 900px) {
   .team-waiting-hero {
     grid-template-columns: 1fr;
@@ -2934,6 +3104,11 @@ h2.news-title {
   }
 }
 @media (max-width: 620px) {
+  .market-causality { margin-top: 40px; }
+  .market-causality-head { align-items: flex-start; }
+  .market-causality-head > svg { width: 25px; }
+  .causality-node { width: 245px; min-height: 370px; }
+  .causality-link { width: 88px; }
   .team-waiting-hero {
     padding-top: 36px;
     gap: 25px;
