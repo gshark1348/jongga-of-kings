@@ -22,7 +22,7 @@ Deno.serve(async request=>{
     if(action==="create_game"){
       const adminToken=newToken();let createdGame=null;
       for(let attempt=0;attempt<5&&!createdGame;attempt++){
-        const code=newGameCode();const{data,error}=await db.from("games").insert({code,name:String(body.name??"투자왕 결정전").trim().slice(0,40)||"투자왕 결정전",status:"lobby",current_turn:1,total_turns:Math.min(10,Math.max(5,Number(body.totalTurns??8))),max_teams:Math.min(12,Math.max(2,Number(body.maxTeams??12))),initial_budget:Number(body.initialBudget??100000000),minimum_turnover:Number(body.minimumTurnover??20),base_rate:3}).select().single();
+        const code=newGameCode();const{data,error}=await db.from("games").insert({code,name:String(body.name??"투자왕 결정전").trim().slice(0,40)||"투자왕 결정전",status:"lobby",current_turn:1,total_turns:Math.min(20,Math.max(5,Number(body.totalTurns??8))),max_teams:Math.min(12,Math.max(2,Number(body.maxTeams??12))),initial_budget:Number(body.initialBudget??100000000),minimum_turnover:Number(body.minimumTurnover??20),base_rate:3}).select().single();
         if(!error)createdGame=data;else if(error.code!=="23505")return reply({error:error.message},400);
       }
       if(!createdGame)return reply({error:"게임 코드를 생성하지 못했습니다. 다시 시도해주세요."},500);

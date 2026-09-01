@@ -97,11 +97,15 @@ const chainTemplates: Record<Sector, { label: string; steps: ChainStep[] }> = {
 export const companyEventChains: CompanyEvent[] = companies.flatMap((company) => {
   const chain = chainTemplates[company.sector];
   const magnitude=company.volatility==="높음"?4.8:company.volatility==="보통"?3.6:2.6;
-  return chain.steps.map((step,index)=>({
+  const chainLength=2+seededIndex(`${company.id}-chain-length`,2);
+  const selectedSteps=chainLength===2
+    ? [chain.steps[0],chain.steps.at(-1)!]
+    : [chain.steps[0],chain.steps[1],chain.steps.at(-1)!];
+  return selectedSteps.map((step,index)=>({
     id:`${company.id}-chain-${index+1}`,companyId:company.id,companyName:company.name,sector:company.sector,
     headline:step.headline(company),sentiment:step.sentiment,
     directImpact:Number(((step.sentiment==="positive"?1:-1)*magnitude*step.impactMultiplier).toFixed(2)),
-    chainId:`${company.id}-main`,chainLabel:chain.label,chainStage:index+1,chainLength:chain.steps.length,
+    chainId:`${company.id}-main`,chainLabel:chain.label,chainStage:index+1,chainLength,
   }));
 });
 
