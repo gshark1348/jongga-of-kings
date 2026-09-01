@@ -22,6 +22,25 @@ const media: Record<Sector | "거시", [string, string]> = {
   거시:["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1400&q=85","Unsplash · Alex Shutin"],
 };
 
+const illustrationBase = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/news-illustrations`;
+const eventIllustrations: Partial<Record<string,string>> = {
+  "AI-04":"ai-04-hbm-shortage.png",
+  "PL-04":"pl-04-platform-fee-disclosure.png",
+  "AU-05":"au-05-battery-safety.png",
+  "BIO-04":"bio-04-clinical-failure.png",
+  "FN-04":"fn-04-margin-call.png",
+  "EN-03":"en-03-power-reserve.png",
+  "IND-03":"ind-03-shipyard-cost.png",
+  "CON-04":"con-04-food-inflation.png",
+  "MAC-01":"mac-01-rate-cut.png",
+  "MAC-07":"mac-07-port-gridlock.png",
+};
+
+function eventMedia(id:string, fallback:[string,string]):[string,string] {
+  const filename=eventIllustrations[id];
+  return filename?[`${illustrationBase}/${filename}`,"종가의 제왕 · AI 생성 삽화"]:fallback;
+}
+
 type EventSeed = [string,string,string,string,MarketEvent["phase"],Partial<Record<MarketFactor,number>>,Partial<Record<HiddenMarketState,number>>];
 type Chain = {sector:Sector;prefix:string;seeds:EventSeed[]};
 
@@ -100,7 +119,7 @@ function chainEvents(chain:Chain): MarketEvent[] {
     const id=`${chain.prefix}-${String(index+1).padStart(2,"0")}`;
     const next=`${chain.prefix}-${String((index+1)%chain.seeds.length+1).padStart(2,"0")}`;
     const branch=index===1?`${chain.prefix}-04`:index===3?`${chain.prefix}-06`:next;
-    const [imageUrl,imageCredit]=media[chain.sector];
+    const [imageUrl,imageCredit]=eventMedia(id,media[chain.sector]);
     return {id,headline,briefs:[brief1,brief2],internalName,impact:`${chain.sector} ${phase} 국면 · ${Object.keys(factors).map(key=>factorNames[key as MarketFactor]).slice(0,3).join("·")} 변화`,imageUrl,imageCredit,factors,sector:chain.sector,phase,successors:[next,branch],baseWeight:18,stateChanges,stateAffinity:stateChanges};
   });
 }
@@ -120,6 +139,6 @@ const macroSeeds: Array<[string,string,string,Partial<Record<MarketFactor,number
   ["근거 없는 낙관론 확산…전 업종 동반 상승에 경고음","신용거래와 거래대금 급증","증권가 과열 지표 주목",{시장공포:-1.15,외국인수급:.55,소비심리:.7},{risk:16,liquidity:12,techHeat:12}],
 ];
 
-const macroEvents: MarketEvent[]=macroSeeds.map((seed,index)=>{const [headline,brief1,brief2,factors,stateChanges]=seed;const [imageUrl,imageCredit]=media.거시;return {id:`MAC-${String(index+1).padStart(2,"0")}`,headline,briefs:[brief1,brief2],internalName:`거시 독립 사건 ${index+1}`,impact:`전 시장 거시 충격 · ${Object.keys(factors).map(key=>factorNames[key as MarketFactor]).slice(0,3).join("·")} 변화`,imageUrl,imageCredit,factors,sector:"거시",phase:"독립",successors:[],baseWeight:7,stateChanges,stateAffinity:stateChanges};});
+const macroEvents: MarketEvent[]=macroSeeds.map((seed,index)=>{const [headline,brief1,brief2,factors,stateChanges]=seed;const id=`MAC-${String(index+1).padStart(2,"0")}`;const [imageUrl,imageCredit]=eventMedia(id,media.거시);return {id,headline,briefs:[brief1,brief2],internalName:`거시 독립 사건 ${index+1}`,impact:`전 시장 거시 충격 · ${Object.keys(factors).map(key=>factorNames[key as MarketFactor]).slice(0,3).join("·")} 변화`,imageUrl,imageCredit,factors,sector:"거시",phase:"독립",successors:[],baseWeight:7,stateChanges,stateAffinity:stateChanges};});
 
 export const marketEventCatalog: MarketEvent[]=[...chains.flatMap(chainEvents),...macroEvents];
