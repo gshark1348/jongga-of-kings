@@ -64,12 +64,12 @@ export const news: NewsIssue[] = [
 ];
 
 export const surpriseEvents: SurpriseEvent[] = [
-  {id:"deal",category:"강한 호재",headline:"글로벌 기업과 초대형 공급계약 체결",impact:"선택 산업 강한 상승, 공급망 산업 동반 반응"},
-  {id:"fire",category:"강한 악재",headline:"핵심 생산시설서 화재…공급 차질 우려",impact:"생산 차질과 경쟁사 반사이익 발생"},
-  {id:"rate",category:"시장 충격",headline:"예상 못 한 금리 결정…금융시장 출렁",impact:"금리 민감도에 따라 전 산업 차등 반응"},
-  {id:"rotation",category:"심리 변화",headline:"한동안 외면받던 업종에 매수세",impact:"소외 산업 반등과 기존 주도주 자금 이탈"},
-  {id:"outage",category:"강한 악재",headline:"대규모 전산 장애…금융·유통 서비스 중단",impact:"디지털 산업 약세, 보안 수요 증가"},
-  {id:"mania",category:"심리 변화",headline:"뚜렷한 이유 없이 치솟는 중소형주",impact:"중소형주 강세와 버블 위험 급증"},
+  {id:"deal",category:"강한 호재",headline:"글로벌 기업과 초대형 공급계약 체결",impact:"수출·설비 산업 강한 상승, 공급망 동반 반응",factors:{수출경기:1.35,외국인수급:.8,시장공포:-.45},stateChanges:{growth:12,risk:8,supply:5}},
+  {id:"fire",category:"강한 악재",headline:"핵심 생산시설서 화재…공급 차질 우려",impact:"생산 차질과 경쟁사 반사이익 발생",factors:{반도체공급:-1.15,원자재:.7,시장공포:1.1},stateChanges:{supply:18,risk:-12,inflation:6}},
+  {id:"rate",category:"시장 충격",headline:"예상 못 한 금리 결정…금융시장 출렁",impact:"금리 민감도에 따라 전 산업 차등 반응",factors:{금리:1.25,외국인수급:-.65,시장공포:.85},stateChanges:{liquidity:-14,credit:11,risk:-9}},
+  {id:"rotation",category:"심리 변화",headline:"한동안 외면받던 업종에 매수세",impact:"소외 산업 반등과 기존 주도주 자금 이탈",factors:{외국인수급:.45,시장공포:-.35,소비심리:.35},stateChanges:{risk:7,techHeat:-10,growth:4}},
+  {id:"outage",category:"강한 악재",headline:"대규모 전산 장애…금융·유통 서비스 중단",impact:"디지털 산업 약세, 보안 수요 증가",factors:{규제:.9,소비심리:-.75,시장공포:1.2},stateChanges:{risk:-14,consumption:-8,credit:5}},
+  {id:"mania",category:"심리 변화",headline:"뚜렷한 이유 없이 치솟는 중소형주",impact:"중소형주 강세와 버블 위험 급증",factors:{외국인수급:.65,시장공포:-.75,금리:-.25},stateChanges:{risk:14,liquidity:11,techHeat:16}},
 ];
 
 export const sectorPerformance = [5.9,-2.4,-0.7,2.8,1.5,2.2,1.1,-0.4];

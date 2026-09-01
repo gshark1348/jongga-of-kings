@@ -14,16 +14,33 @@ const templates: Record<Sector, { positive: ((company: Company) => string)[]; ne
 
 function seededIndex(seed: string, length: number) { return [...seed].reduce((sum,char)=>((sum*31)+char.charCodeAt(0))>>>0,2166136261) % length; }
 
-export function getCompanyEvents(turn: number, count = 2): CompanyEvent[] {
+const shared = {
+  positive: [
+    (c:Company)=>`${c.name}, 분기 영업이익 시장 전망 상회…핵심 사업 수익성 개선`,
+    (c:Company)=>`${c.name}, 해외 전략 고객 신규 확보…중장기 매출 기반 확대`,
+    (c:Company)=>`${c.name}, 경쟁사 공급 차질에 긴급 주문 유입…반사이익 기대`,
+    (c:Company)=>`${c.name}, 자사주 매입·주주환원 확대 발표…시장 신뢰 회복`,
+  ],
+  negative: [
+    (c:Company)=>`${c.name}, 분기 실적 시장 기대 하회…재고와 비용 부담 부각`,
+    (c:Company)=>`${c.name}, 주요 계약 재협상 돌입…매출 인식 일정 불확실`,
+    (c:Company)=>`${c.name}, 경영진 교체와 지배구조 개편 예고…전략 공백 우려`,
+    (c:Company)=>`${c.name}, 경쟁사 신제품 점유율 확대…가격 경쟁 심화 전망`,
+  ],
+};
+
+export const companyEventCatalog: CompanyEvent[] = companies.flatMap((company) => (["positive","negative"] as const).flatMap((sentiment) => [...templates[company.sector][sentiment],...shared[sentiment]].map((makeHeadline,index) => {
+  const magnitude=company.volatility==="높음"?4.8:company.volatility==="보통"?3.6:2.6;
+  return {id:`${company.id}-${sentiment}-${index}`,companyId:company.id,companyName:company.name,sector:company.sector,headline:makeHeadline(company),sentiment,directImpact:sentiment==="positive"?magnitude:-magnitude};
+})));
+
+export function getCompanyEvents(turn: number, count = 2, usedIds: string[] = []): CompanyEvent[] {
   const picked: CompanyEvent[] = [];
   for (let slot=0; slot<count; slot+=1) {
-    const available=companies.filter(company=>!picked.some(event=>event.companyId===company.id));
-    const company=available[seededIndex(`company-${turn}-${slot}`,available.length)];
-    const sentiment: CompanyEvent["sentiment"] = seededIndex(`sentiment-${turn}-${slot}`,2)===0?"positive":"negative";
-    const choices=templates[company.sector][sentiment];
-    const headline=choices[seededIndex(`headline-${turn}-${company.id}`,choices.length)](company);
-    const magnitude=company.volatility==="높음"?4.8:company.volatility==="보통"?3.6:2.6;
-    picked.push({id:`${turn}-${slot}-${company.id}`,companyId:company.id,companyName:company.name,sector:company.sector,headline,sentiment,directImpact:sentiment==="positive"?magnitude:-magnitude});
+    const available=companyEventCatalog.filter((event)=>!usedIds.includes(event.id)&&!picked.some((item)=>item.companyId===event.companyId));
+    const fallback=companyEventCatalog.filter((event)=>!picked.some((item)=>item.companyId===event.companyId));
+    const candidates=available.length?available:fallback;
+    picked.push(candidates[seededIndex(`company-event-${turn}-${slot}`,candidates.length)]);
   }
   return picked;
 }

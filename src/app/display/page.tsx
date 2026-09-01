@@ -9,7 +9,7 @@ import { getMarketMood, getNewsIssue } from "@/lib/news-engine";
 
 const modes = ["종합 현황", "뉴스 집중", "랭킹 집중", "시장 현황"];
 export default function Display() {
-  const { teams, status, turn, totalTurns, gameCode } = useGame();
+  const { teams, status, turn, totalTurns, gameCode, currentNews } = useGame();
   const router = useRouter();
   const [mode, setMode] = useState(0);
   const [auto, setAuto] = useState(false);
@@ -23,8 +23,8 @@ export default function Display() {
   }, [auto]);
   useEffect(() => { if (status === "finished") router.replace("/results"); }, [router, status]);
   const initialSetup = turn === 1;
-  const issue = getNewsIssue(gameCode, turn);
-  const marketMood = getMarketMood(gameCode, turn);
+  const issue = currentNews?.issue??getNewsIssue(gameCode, turn);
+  const marketMood = currentNews?.marketMood??getMarketMood(gameCode, turn);
   if (status === "lobby")
     return (
       <main className="display-page">
@@ -140,7 +140,9 @@ export default function Display() {
                       {brief}
                     </p>
                   ))}
+                  {currentNews?.companyEvents.map((event) => <p key={event.id}><b>{event.companyName}</b><br/>{event.headline}</p>)}
                 </div>
+                {currentNews?.surpriseEvent&&<div className="notice"><strong>돌발 속보</strong> {currentNews.surpriseEvent.headline}</div>}
               </div>
               <aside className="ranking">
                 <h2>실시간 팀 랭킹</h2>

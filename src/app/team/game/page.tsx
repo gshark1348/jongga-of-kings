@@ -26,12 +26,12 @@ export default function TeamGame() {
     currentTeam,
     currentPortfolio,
     status,
-    gameCode,
+    gameCode,currentNews,
   } = useGame();
   const router=useRouter();
   useEffect(()=>{if(status==="finished")router.replace("/results")},[router,status]);
   const initialSetup = turn === 1;
-  const issue = getNewsIssue(gameCode, turn);
+  const issue = currentNews?.issue??getNewsIssue(gameCode, turn);
   if (!currentTeam)
     return (
       <>
@@ -179,7 +179,7 @@ export default function TeamGame() {
           </div>
           <div className="header-actions">
             {issue && (
-              <NewsPaperPopup key={issue.id} issue={issue} turn={turn} />
+              <NewsPaperPopup key={issue.id} issue={issue} turn={turn} companyEvents={currentNews?.companyEvents} surpriseEvent={currentNews?.surpriseEvent}/>
             )}
             <Link href="/team/portfolio">
               <Button>

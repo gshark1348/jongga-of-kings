@@ -85,6 +85,17 @@ export interface SurpriseEvent {
   category: "강한 호재" | "강한 악재" | "시장 충격" | "심리 변화";
   headline: string;
   impact: string;
+  factors: Partial<Record<MarketFactor, number>>;
+  stateChanges: Partial<Record<string, number>>;
+}
+
+export interface PersistedNews {
+  turn: number;
+  issue: NewsIssue;
+  companyEvents: CompanyEvent[];
+  surpriseEvent: SurpriseEvent | null;
+  marketMood: { label: string; score: number };
+  sectorAttention: Partial<Record<Sector, number>>;
 }
 
 export interface PortfolioPosition {

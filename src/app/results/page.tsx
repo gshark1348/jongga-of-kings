@@ -27,10 +27,10 @@ function resultFromTeam(team: Team): FinalResult {
 }
 
 export default function Results() {
-  const { finalResults, teams, status, gameCode, initialBudget, totalTurns, loading } = useGame();
+  const { finalResults, teams, status, gameCode, initialBudget, totalTurns, loading, newsHistory } = useGame();
   const results = (finalResults.length ? finalResults : teams.map(resultFromTeam)).toSorted((a, b) => a.rank - b.rank);
   const winner = results[0];
-  const issueHistory = getNewsSequence(gameCode, Math.max(0, totalTurns - 1));
+  const issueHistory = newsHistory.length?newsHistory.map(news=>news.issue):getNewsSequence(gameCode, Math.max(0, totalTurns - 1));
 
   if (loading && !winner) {
     return <><SiteHeader/><Shell><section className="portfolio-locked"><p className="eyebrow">FINAL CLEARING</p><h1>최종 장부를 불러오고 있습니다</h1></section></Shell></>;
